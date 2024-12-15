@@ -1,0 +1,46 @@
+{
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.5.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "mailtrap": "^3.4.0",
+    "mongoose": "^8.8.3",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  },
+  "name": "lynkcircle-backend",
+  "version": "1.0.0",
+  "description": "Node JS HTTP WEB SERVER for Lynk Circle Application",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon lynkcircles-backend/index.js",
+    "start": "node lynkcircles-backend/index.js",
+    "build": "npm install && npm install --prefix lynkcircles-react-app && npm run build --prefix lynkcircles-react-app"
+
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yashhbeladiya/lynkcircle-node-server-app.git"
+  },
+  "keywords": [
+    "nodejs",
+    "server",
+    "social",
+    "media",
+    "link",
+    "job"
+  ],
+  "author": "Yash Hareshbhai Beladiya",
+  "type": "module",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yashhbeladiya/lynkcircle-node-server-app/issues"
+  },
+  "homepage": "https://github.com/yashhbeladiya/lynkcircle-node-server-app#readme"
+}
