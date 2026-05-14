@@ -1,4 +1,5 @@
 import { io, type Socket } from "socket.io-client";
+import toast from "react-hot-toast";
 import type { Message } from "@/types/message";
 
 /**
@@ -37,35 +38,60 @@ export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 let instance: AppSocket | null = null;
 
+const log = (...args: unknown[]) => {
+  if (import.meta.env.DEV) console.info("[socket]", ...args);
+};
+
 /**
- * Module-level singleton. We don't open the socket eagerly because the
- * cookie may not be set yet on first page load. `connectSocket()` is
- * called by useSocketLifecycle after auth resolves; `disconnectSocket()`
- * is called on sign-out.
+ * Module-level singleton, idempotent. Safe to call from any component
+ * effect: if a socket already exists it's returned as-is; otherwise the
+ * connection is opened.
+ *
+ * IMPORTANT: child-component effects fire BEFORE the parent's effect
+ * during React's commit phase, so any subscriber (ChatPane, useOnlineUsers,
+ * etc.) MUST call connectSocket() rather than a "read-only" getter —
+ * otherwise the socket may not exist yet when the subscriber tries to
+ * attach its listener, and the listener silently no-ops for the lifetime
+ * of that subscriber.
  *
  * Why a singleton: socket.io maintains an internal reconnect loop. We
- * only want one of those per tab — multiple instances would compete to
- * deliver the same events and inflate the connected-users count
- * server-side.
+ * only want one per tab — multiple instances would compete to deliver
+ * the same events and inflate the server-side connected-users count.
  */
 export const connectSocket = (): AppSocket => {
-  if (instance && instance.connected) return instance;
-  if (instance && !instance.connected) {
-    instance.connect();
+  if (instance) {
+    if (!instance.connected) instance.connect();
     return instance;
   }
 
-  // baseURL is relative so dev (Vite proxy) and prod (same-origin) both
-  // work without a build-time env switch. The cookie auth handshake on
-  // the server reads from socket.handshake.headers.cookie — withCreds
-  // makes the browser include the cookie on the WS upgrade request.
-  instance = io({
+  // No explicit URL: the browser uses the current origin. In dev that's
+  // the Vite server (3001), which proxies /socket.io to the backend
+  // (5100). In prod the Express app serves both APIs and assets, so
+  // same-origin is what we want too.
+  //
+  // No explicit `transports` either — letting socket.io use its default
+  // ["polling", "websocket"] order is more resilient through proxies
+  // than forcing websocket-first.
+  const next: AppSocket = io({
     withCredentials: true,
-    transports: ["websocket", "polling"],
     autoConnect: true,
   });
 
-  return instance;
+  // Bind diagnostic listeners once, at instance creation time. These are
+  // module-level (not in any React effect), so they survive remounts.
+  next.on("connect", () => log("connected", next.id));
+  next.on("disconnect", (reason) => log("disconnected:", reason));
+  next.on("connect_error", (err) => {
+    log("connect_error:", err.message);
+    // Surface auth-cookie / proxy failures so the user doesn't sit
+    // wondering why messages aren't moving in real time.
+    toast.error(`Real-time connection failed: ${err.message}`, {
+      id: "socket-connect-error",
+    });
+  });
+
+  instance = next;
+  return next;
 };
 
 export const disconnectSocket = (): void => {
@@ -75,4 +101,10 @@ export const disconnectSocket = (): void => {
   instance = null;
 };
 
+/**
+ * Read-only accessor — returns null if the socket hasn't been opened
+ * yet. Prefer `connectSocket()` from inside component effects; reserve
+ * `getSocket()` for cleanup paths and tests where creating-on-read
+ * would be a side effect.
+ */
 export const getSocket = (): AppSocket | null => instance;

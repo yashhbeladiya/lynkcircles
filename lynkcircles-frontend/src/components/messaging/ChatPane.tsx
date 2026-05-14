@@ -7,14 +7,12 @@ import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import CircularProgress from "@mui/material/CircularProgress";
 import { ArrowLeft, MessagesSquare } from "lucide-react";
-import toast from "react-hot-toast";
-
 import { UserAvatar, EmptyState } from "@/components/ui";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useMessages } from "@/hooks/useMessages";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { api } from "@/lib/axios";
-import { getSocket } from "@/lib/socket";
+import { connectSocket } from "@/lib/socket";
 import { MessageBubble } from "./MessageBubble";
 import { MessageComposer } from "./MessageComposer";
 import { DateDivider } from "./DateDivider";
@@ -57,7 +55,7 @@ export const ChatPane = () => {
   // sockets owned by the recipient, so we filter by sender userId.
   useEffect(() => {
     if (!peerId) return;
-    const socket = getSocket();
+    const socket = connectSocket();
     if (!socket) return;
 
     const onTyping = ({ userId, isTyping }: { userId: string; isTyping: boolean }) => {
@@ -81,7 +79,7 @@ export const ChatPane = () => {
   // global socket lifecycle hook reconciles into the cache.
   useEffect(() => {
     if (!authUser || !peerId || !messages) return;
-    const socket = getSocket();
+    const socket = connectSocket();
     if (!socket) return;
     for (const m of messages) {
       if (m.sender._id === peerId && m.status !== "read") {
@@ -107,7 +105,7 @@ export const ChatPane = () => {
   const handleTyping = useCallback(
     (isTyping: boolean) => {
       if (!peerId) return;
-      getSocket()?.emit("typing", { recipientId: peerId, isTyping });
+      connectSocket()?.emit("typing", { recipientId: peerId, isTyping });
     },
     [peerId]
   );
@@ -123,11 +121,12 @@ export const ChatPane = () => {
       fileType?: Message["fileType"];
     }) => {
       if (!peerId || !authUser) return;
-      const socket = getSocket();
-      if (!socket?.connected) {
-        toast.error("Not connected — reconnecting…");
-        return;
-      }
+      // socket.io buffers outbound emits when not yet connected, so we
+      // don't gate on socket.connected — gating there meant a brief
+      // reconnect window swallowed the user's click with no optimistic
+      // bubble. If auth-cookie or proxy is truly broken, the
+      // connect_error listener in lib/socket.ts surfaces a toast.
+      const socket = connectSocket();
 
       const tempId = `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const optimistic: Message = {

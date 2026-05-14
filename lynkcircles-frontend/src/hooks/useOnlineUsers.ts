@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getSocket } from "@/lib/socket";
+import { connectSocket } from "@/lib/socket";
 
 /**
  * Subscribe to online-user changes. Returns a Set keyed by userId.
@@ -13,7 +13,7 @@ export const useOnlineUsers = (): ReadonlySet<string> => {
   const [online, setOnline] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
-    const socket = getSocket();
+    const socket = connectSocket();
     if (!socket) return;
 
     const onHydrate = ({ userIds }: { userIds: string[] }) =>
