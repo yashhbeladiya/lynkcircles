@@ -3,112 +3,149 @@ import Conversation from "../models/conversation.model.js";
 import Attachment from "../models/attachments.model.js";
 import { uploadToCloudinary } from "../util/util.js";
 
+const SENDER_FIELDS = "_id firstName lastName username profilePicture";
+
+const upsertConversation = async (userA, userB, lastMessageId) =>
+  Conversation.findOneAndUpdate(
+    { participants: { $all: [userA, userB] }, isGroup: { $ne: true } },
+    {
+      $setOnInsert: { participants: [userA, userB], isGroup: false },
+      $set: { lastMessage: lastMessageId },
+    },
+    { upsert: true, new: true }
+  );
+
 export const createMessage = async (req, res) => {
   try {
-    const { recipientId, content, attachmentId } = req.body;
+    const { recipientId, content, fileUrl, fileType } = req.body;
 
-    // Create message
-    const message = new Message({
+    if (!recipientId || (!content?.trim() && !fileUrl)) {
+      return res
+        .status(400)
+        .json({ message: "recipientId and content (or fileUrl) are required" });
+    }
+
+    const message = await Message.create({
       sender: req.user._id,
       recipient: recipientId,
-      content,
-      attachment: attachmentId || null,
+      content: content ?? "",
+      fileUrl: fileUrl || null,
+      fileType: fileType || null,
     });
 
-    await message.save();
+    await upsertConversation(req.user._id, recipientId, message._id);
 
-    // Update or create conversation
-    await Conversation.findOneAndUpdate(
-      {
-        participants: {
-          $all: [req.user._id, recipientId],
-        },
-      },
-      {
-        $addToSet: { participants: [req.user._id, recipientId] },
-        lastMessage: message._id,
-      },
-      { upsert: true }
-    );
-
-    res.status(201).json(message);
+    const populated = await message.populate("sender", SENDER_FIELDS);
+    res.status(201).json(populated);
   } catch (error) {
+    console.error("Error in createMessage:", error.message);
     res.status(500).json({ message: "Error sending message" });
   }
 };
 
 export const getMessages = async (req, res) => {
-  const { recipientId } = req.params;
-  console.log("recipientId: ", recipientId);
   try {
-      const messages = await Message.find({
-        $or: [
-          { sender: req.user._id, recipient: recipientId },
-          { sender: recipientId, recipient: req.user._id },
-        ],
-      })
-        .populate("sender", "name avatar")
-        .populate("attachment")
-        .sort({ createdAt: 1 });
-  
-      res.json(messages);
+    const { recipientId } = req.params;
+    const messages = await Message.find({
+      $or: [
+        { sender: req.user._id, recipient: recipientId },
+        { sender: recipientId, recipient: req.user._id },
+      ],
+      isDeleted: { $ne: true },
+    })
+      .populate("sender", SENDER_FIELDS)
+      .sort({ createdAt: 1 });
+
+    res.json(messages);
+  } catch (error) {
+    console.error("Error in getMessages:", error.message);
+    res.status(500).json({ message: "Error fetching messages" });
   }
-  catch (error) {
-        res.status(500).json({ message: "Error fetching messages" });
-    }
-}
+};
 
 export const getConversations = async (req, res) => {
   try {
     const conversations = await Conversation.find({
       participants: req.user._id,
     })
-      .populate("participants", "name avatar")
+      .populate("participants", SENDER_FIELDS)
       .populate({
         path: "lastMessage",
-        populate: {
-          path: "sender",
-          select: "name",
-        },
+        populate: { path: "sender", select: SENDER_FIELDS },
       });
 
     res.json(conversations);
   } catch (error) {
+    console.error("Error in getConversations:", error.message);
     res.status(500).json({ message: "Error fetching conversations" });
   }
 };
 
 export const getConversation = async (req, res) => {
   try {
+    const conversation = await Conversation.findById(
+      req.params.conversationId
+    ).populate("participants", SENDER_FIELDS);
+
+    if (!conversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+
+    const isParticipant = conversation.participants.some(
+      (p) => p._id.toString() === req.user._id.toString()
+    );
+    if (!isParticipant) {
+      return res.status(403).json({ message: "Not a participant" });
+    }
+
     const messages = await Message.find({
-      conversation: req.params.conversationId,
+      $or: conversation.participants.flatMap((a, i) =>
+        conversation.participants
+          .slice(i + 1)
+          .map((b) => ({
+            $or: [
+              { sender: a._id, recipient: b._id },
+              { sender: b._id, recipient: a._id },
+            ],
+          }))
+      ),
+      isDeleted: { $ne: true },
     })
-      .populate("sender", "name avatar")
-      .populate("attachment")
+      .populate("sender", SENDER_FIELDS)
       .sort({ createdAt: 1 });
 
-    res.json(messages);
+    res.json({ conversation, messages });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching messages" });
+    console.error("Error in getConversation:", error.message);
+    res.status(500).json({ message: "Error fetching conversation" });
   }
 };
 
 export const uploadAttachment = async (req, res) => {
   try {
-    // Use a service like AWS S3 or Google Cloud Storage
-    const fileUrl = await uploadToCloudinary(req.file);
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
 
-    const attachment = new Attachment({
+    const fileUrl = await uploadToCloudinary(req.file, "messages");
+    const fileType = req.file.mimetype.split("/")[0];
+
+    const attachment = await Attachment.create({
       fileUrl,
-      fileType: req.file.mimetype.split("/")[0],
+      fileType,
       fileName: req.file.originalname,
       fileSize: req.file.size,
     });
 
-    await attachment.save();
-
-    res.status(201).json(attachment);
+    res.status(201).json({
+      _id: attachment._id,
+      fileUrl,
+      fileType,
+      fileName: attachment.fileName,
+      fileSize: attachment.fileSize,
+    });
   } catch (error) {
+    console.error("Error in uploadAttachment:", error.message);
     res.status(500).json({ message: "Error uploading file" });
   }
 };
