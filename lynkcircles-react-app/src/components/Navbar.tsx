@@ -173,6 +173,7 @@ const Navbar = () => {
         disableGutters
       >
         {/* Logo Section */}
+        <div className="flex items-center">
         <Link to="/" className="flex items-center">
           <img
             className="h-8 w-auto"
@@ -189,6 +190,7 @@ const Navbar = () => {
             inputProps={{ "aria-label": "search" }}
           />
         </Search>
+        </div>
 
         {/* Navbar Links (visible on larger screens) */}
         <div className="hidden sm:flex space-x-4">

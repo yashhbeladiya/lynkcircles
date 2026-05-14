@@ -100,7 +100,7 @@ const RecommandedUser: React.FC<{ user: User }> = ({ user }) => {
         return (
           <Button
             variant="contained"
-            color="warning"
+            color="success"
             disabled
             startIcon={<Clock size={16} />}
           >
@@ -112,7 +112,7 @@ const RecommandedUser: React.FC<{ user: User }> = ({ user }) => {
           <Box sx={{ display: "flex", gap: 1 }}>
             <Button
               variant="contained"
-              color="success"
+              color="warning"
               onClick={() => acceptRequest(connectionStatus.requestId!)}
               startIcon={<Check size={16} />}
             >

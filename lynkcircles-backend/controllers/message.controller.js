@@ -37,6 +37,27 @@ export const createMessage = async (req, res) => {
   }
 };
 
+export const getMessages = async (req, res) => {
+  const { recipientId } = req.params;
+  console.log("recipientId: ", recipientId);
+  try {
+      const messages = await Message.find({
+        $or: [
+          { sender: req.user._id, recipient: recipientId },
+          { sender: recipientId, recipient: req.user._id },
+        ],
+      })
+        .populate("sender", "name avatar")
+        .populate("attachment")
+        .sort({ createdAt: 1 });
+  
+      res.json(messages);
+  }
+  catch (error) {
+        res.status(500).json({ message: "Error fetching messages" });
+    }
+}
+
 export const getConversations = async (req, res) => {
   try {
     const conversations = await Conversation.find({

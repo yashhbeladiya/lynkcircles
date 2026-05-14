@@ -5,12 +5,14 @@ import {
     createMessage,
     getConversations,
     getConversation,
-    uploadAttachment
+    uploadAttachment,
+    getMessages
     } from '../controllers/message.controller.js';
 
 const router = express.Router();
 
 router.post('/', protectRoute, createMessage);
+router.get('/:recipientId', protectRoute, getMessages);
 
 
 router.get('/conversations', protectRoute, getConversations);

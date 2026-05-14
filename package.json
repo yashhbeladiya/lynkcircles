@@ -9,7 +9,8 @@
     "jsonwebtoken": "^9.0.2",
     "mailtrap": "^3.4.0",
     "mongoose": "^8.8.3",
-    "multer": "^1.4.5-lts.1"
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
@@ -22,7 +23,6 @@
     "dev": "nodemon lynkcircles-backend/index.js",
     "start": "node lynkcircles-backend/index.js",
     "build": "npm install && npm install --prefix lynkcircles-react-app && npm run build --prefix lynkcircles-react-app"
-
   },
   "repository": {
     "type": "git",

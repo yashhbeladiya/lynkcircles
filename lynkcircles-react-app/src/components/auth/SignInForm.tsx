@@ -52,6 +52,7 @@ const SignInForm = () => {
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
       toast.success("Logged in successfully");
       navigate("/");
+      console.log("All cookies:", document.cookie);
     },
     onError: (error) => {
       toast.error(error?.response?.data?.message || "Something went wrong");

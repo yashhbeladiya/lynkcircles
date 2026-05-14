@@ -38,7 +38,7 @@ export const signup = async (req, res) => {
         res.cookie('token', token, { 
             httpOnly: true, // This prevents client-side JavaScript from accessing the cookie
             maxAge: 3 * 24 * 60 * 60 * 1000, // Cookie expires in 3 days
-            sameSite: 'Strict', // Cookie is sent only to the same site as the request
+            sameSite: 'Lax', // Cookie is sent only to the same site as the request
             secure: process.env.NODE_ENV === 'production' ? true : false // Cookie is sent only over HTTPS
         });
 
@@ -86,7 +86,7 @@ export const login = async (req, res) => {
         res.cookie('token', token, { 
             httpOnly: true,
             maxAge: 3 * 24 * 60 * 60 * 1000,
-            sameSite: 'Strict',
+            sameSite: 'Lax',
             secure: process.env.NODE_ENV === 'production' ? true : false
         });
 

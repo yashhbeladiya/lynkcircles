@@ -1,6 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import http from 'http'; 
+import initializeSocket from './lib/socket.js';
 import cors from "cors";
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -17,6 +19,9 @@ import path from "path";
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app); 
+const io = initializeSocket(server); 
+console.log('Socket server initialized');
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
@@ -30,7 +35,6 @@ if (process.env.NODE_ENV !== "production") {
   ); // origin: true allows requests from all origins
 }
 
-app.use(express.json()); // Middleware to parse JSON data in the request body
 app.use(cookieParser()); // Middleware to parse cookies in the request headers
 
 app.use("/api/v1/auth", authRoutes);
@@ -47,11 +51,10 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/lynkcircles-react-app/build")));
   app.get("*", (req, res) => {
     res.sendFile(path.resolve(__dirname, "lynkcircles-react-app", "build", "index.html"));
-  }
-  );
+  });
 }
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   connectDB();
 });

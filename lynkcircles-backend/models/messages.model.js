@@ -39,10 +39,9 @@ const messageSchema = new mongoose.Schema({
       enum: ['like', 'love', 'laugh', 'sad'] 
     } 
   }],
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-  },
+  isDeleted: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: null }
 });
 
 const Message = mongoose.model('Message', messageSchema);
