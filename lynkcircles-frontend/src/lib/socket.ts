@@ -90,6 +90,15 @@ export const connectSocket = (): AppSocket => {
     });
   });
 
+  // Wide-net event tracer for dev — surfaces every server-emitted event
+  // by name + payload so a "real-time isn't working" debugging session
+  // can confirm in one glance whether the events are reaching the client
+  // at all (the answer to that question changes the next step entirely).
+  if (import.meta.env.DEV) {
+    next.onAny((event, ...args) => log("<-", event, ...args));
+    next.onAnyOutgoing((event, ...args) => log("->", event, ...args));
+  }
+
   instance = next;
   return next;
 };

@@ -11,9 +11,12 @@ const messageSchema = new mongoose.Schema({
     ref: "User", 
     required: true 
   },
-  content: { 
-    type: String, 
-    required: true 
+  content: {
+    type: String,
+    // Not required: a message may be just an attachment with no text.
+    // Validation that *something* (content or fileUrl) is present lives
+    // in the controller/socket layer so the rule can stay app-level.
+    default: "",
   },
   fileUrl: { 
     type: String, 

@@ -26,6 +26,16 @@ export const useSocketLifecycle = () => {
     const socket = connectSocket();
 
     const pushMessage = (message: Message, peerId: string) => {
+      if (import.meta.env.DEV) {
+        console.info(
+          "[messages] pushMessage key=",
+          [MESSAGES_KEY, peerId],
+          "id=",
+          message._id,
+          "tempId=",
+          message.tempId
+        );
+      }
       queryClient.setQueryData<Message[] | undefined>(
         [MESSAGES_KEY, peerId],
         (old) => {

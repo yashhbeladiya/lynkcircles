@@ -54,7 +54,11 @@ export const MessageBubble = ({ message, mine, compact = false }: Props) => {
       sx={{
         display: "flex",
         justifyContent: mine ? "flex-end" : "flex-start",
-        mt: compact ? 0.5 : 1.25,
+        // Uniform 4px gap between every bubble regardless of sender or
+        // grouping. The original "1.25 for non-compact" pattern made one
+        // message stand out with extra space which read as a layout bug
+        // more than a deliberate group break.
+        mt: 0.5,
       }}
     >
       <Box

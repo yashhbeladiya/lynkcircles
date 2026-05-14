@@ -35,6 +35,7 @@ export const ChatPane = () => {
   const { data: messages, isLoading } = useMessages(peerId);
   const online = useOnlineUsers();
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const initialScrollDoneRef = useRef<string | null>(null);
   const [peerTyping, setPeerTyping] = useState(false);
   const typingHideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -91,16 +92,44 @@ export const ChatPane = () => {
     }
   }, [messages, peerId, authUser]);
 
-  // Autoscroll on new messages — only if the user was already near the
-  // bottom, so we don't yank them up mid-history-scroll.
+  // Autoscroll behavior:
+  // - On initial load (or when switching peers), JUMP to the bottom so
+  //   the user sees the latest conversation, the way every messenger
+  //   works. Tracked per-peer in a ref so each new conversation gets
+  //   its own first-render snap.
+  // - On subsequent updates, only auto-scroll if the user was already
+  //   near the bottom — otherwise they'd be yanked back down while
+  //   scrolling history.
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
+    if (!el || !peerId || !messages || messages.length === 0) return;
+
+    const isFirstLoadForPeer = initialScrollDoneRef.current !== peerId;
+    if (isFirstLoadForPeer) {
+      // Use rAF so layout has settled (fonts loaded, images sized) by
+      // the time we read scrollHeight. Otherwise we frequently land
+      // a few pixels short of the bottom.
+      requestAnimationFrame(() => {
+        if (!scrollRef.current) return;
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        initialScrollDoneRef.current = peerId;
+      });
+      return;
+    }
+
     const fromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     if (fromBottom < 200) {
       el.scrollTop = el.scrollHeight;
     }
-  }, [messages, peerTyping]);
+  }, [messages, peerTyping, peerId]);
+
+  // Reset the first-load flag when peerId changes so a fresh chat
+  // always starts at the bottom.
+  useEffect(() => {
+    if (initialScrollDoneRef.current && initialScrollDoneRef.current !== peerId) {
+      initialScrollDoneRef.current = null;
+    }
+  }, [peerId]);
 
   const handleTyping = useCallback(
     (isTyping: boolean) => {
