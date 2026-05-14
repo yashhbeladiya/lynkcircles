@@ -3,11 +3,21 @@ import toast from "react-hot-toast";
 import { api, apiErrorMessage } from "@/lib/axios";
 import { AUTH_QUERY_KEY } from "@/hooks/useAuthUser";
 import type {
+  ConnectionRequest,
   ConnectionStatus,
   UserProfile,
   UserSummary,
 } from "@/types/user";
 import type { Post, FeedResponse } from "@/types/post";
+
+export const useConnectionRequests = () =>
+  useQuery<ConnectionRequest[]>({
+    queryKey: ["connections", "requests"],
+    queryFn: async () => {
+      const { data } = await api.get<ConnectionRequest[]>("/connections/requests");
+      return data ?? [];
+    },
+  });
 
 export const profileKey = (username: string | undefined) =>
   ["profile", username] as const;

@@ -39,7 +39,7 @@ export const getSuggestedConnections = async (req, res) => {
           ],
         })
           .select(
-            "username firstName lastName location headline profilePicture"
+            "username firstName lastName location headline profilePicture role verified"
           )
           .limit(5);
   
@@ -397,7 +397,7 @@ export const getUserConnections = async (req, res) => {
     const connections = await User.find({
       _id: { $in: req.user.connections },
     }).select(
-      "username firstName lastName location headline connections profilePicture"
+      "username firstName lastName location headline connections profilePicture role verified"
     );
     res.status(200).json(connections);
   } catch (error) {

@@ -44,6 +44,22 @@ export interface UserSummary {
   profilePicture?: string | null;
   verified?: boolean;
   headline?: string;
+  role?: UserRole;
+  location?: {
+    city?: string;
+    state?: string;
+    zipCode?: string;
+  };
+  connections?: string[];
+}
+
+/** A pending connection request as returned by GET /connections/requests. */
+export interface ConnectionRequest {
+  _id: string;
+  sender: UserSummary;
+  recipient: string;
+  status: "pending" | "accepted" | "rejected";
+  createdAt?: string;
 }
 
 /**

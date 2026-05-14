@@ -54,7 +54,10 @@ export const getConnectionRequests = async (req, res) => {
       status: "pending"
     }).populate(
       "sender",
-      "firstName lastName username profilePicture headline connections"
+      // Include role + verified + location so the Network page can
+      // render the marketplace context — what they do, where, and
+      // whether they're a vetted Worker.
+      "firstName lastName username profilePicture headline connections role verified location"
     );
     res.status(200).json(requests);
   } catch (error) {
