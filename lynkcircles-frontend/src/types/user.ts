@@ -45,3 +45,27 @@ export interface UserSummary {
   verified?: boolean;
   headline?: string;
 }
+
+/**
+ * Full public profile as returned by GET /users/profile/:username.
+ * Mirrors the User model with `password` stripped. Used by the Profile
+ * page; not all fields are guaranteed to be present on every user.
+ */
+export interface UserProfile extends AuthUser {
+  followers?: string[];
+  followingClients?: string[];
+  savedWorkers?: string[];
+  socialLinks?: {
+    linkedin?: string;
+    github?: string;
+    twitter?: string;
+    facebook?: string;
+    website?: string;
+  };
+}
+
+export type ConnectionStatus =
+  | { status: "connected" }
+  | { status: "pending" }
+  | { status: "received"; requestId: string }
+  | { status: "not_connected" };

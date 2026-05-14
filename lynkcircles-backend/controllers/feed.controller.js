@@ -1,4 +1,5 @@
 import Post from "../models/post.model.js";
+import User from "../models/user.model.js";
 import Notification from "../models/notification.model.js";
 import { uploadToCloudinary, deleteFromCloudinary } from "../util/util.js";
 
@@ -84,6 +85,35 @@ export const deletePost = async (req, res) => {
     res.status(200).json({ message: "Post deleted successfully" });
   } catch (error) {
     console.log("Error in deletePost: ", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * Posts authored by a single user, newest first. Used by the profile
+ * Activity section. Authorization model is intentionally open: profiles
+ * are public, so anyone signed in can read another user's posts.
+ */
+export const getPostsByUsername = async (req, res) => {
+  try {
+    const { username } = req.params;
+    const author = await User.findOne({ username }).select("_id");
+    if (!author) return res.status(404).json({ message: "User not found" });
+
+    const posts = await Post.find({ author: author._id })
+      .sort({ createdAt: -1 })
+      .populate(
+        "author",
+        "_id firstName lastName username profilePicture headline verified"
+      )
+      .populate({
+        path: "comments.user",
+        select: "_id firstName lastName username profilePicture",
+      });
+
+    res.json({ posts });
+  } catch (error) {
+    console.error("Error in getPostsByUsername:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
