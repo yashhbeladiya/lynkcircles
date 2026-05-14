@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
 import {
@@ -11,10 +12,17 @@ import {
 
 const router = express.Router();
 
+// In-memory uploads. Buffer is streamed to Cloudinary in the handler.
+// 10MB cap matches the express body limit and covers most images/docs.
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+});
+
 // More specific paths must come before the catch-all `/:recipientId`,
 // otherwise Express matches `/conversations` as `/:recipientId` with
 // recipientId="conversations".
-router.post("/upload", protectRoute, uploadAttachment);
+router.post("/upload", protectRoute, upload.single("file"), uploadAttachment);
 router.get("/conversations", protectRoute, getConversations);
 router.get("/conversations/:conversationId", protectRoute, getConversation);
 

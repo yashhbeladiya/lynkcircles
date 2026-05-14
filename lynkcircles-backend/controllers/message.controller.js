@@ -1,7 +1,7 @@
 import Message from "../models/messages.model.js";
 import Conversation from "../models/conversation.model.js";
 import Attachment from "../models/attachments.model.js";
-import { uploadToCloudinary } from "../util/util.js";
+import { uploadBufferToCloudinary } from "../util/util.js";
 
 const SENDER_FIELDS = "_id firstName lastName username profilePicture";
 
@@ -121,14 +121,25 @@ export const getConversation = async (req, res) => {
   }
 };
 
+const FILE_TYPE_MAP = {
+  image: "image",
+  video: "video",
+  audio: "audio",
+};
+
+const resolveFileType = (mimetype) => {
+  const top = mimetype.split("/")[0];
+  return FILE_TYPE_MAP[top] ?? "document";
+};
+
 export const uploadAttachment = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    const fileUrl = await uploadToCloudinary(req.file, "messages");
-    const fileType = req.file.mimetype.split("/")[0];
+    const fileUrl = await uploadBufferToCloudinary(req.file, "messages");
+    const fileType = resolveFileType(req.file.mimetype);
 
     const attachment = await Attachment.create({
       fileUrl,
