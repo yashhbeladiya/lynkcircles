@@ -95,10 +95,13 @@ export const MessageComposer = ({ disabled, onTyping, onSend }: Props) => {
         setUploading(true);
         const form = new FormData();
         form.append("file", attachment.file);
+        // No Content-Type header here on purpose — axios sets
+        // `multipart/form-data; boundary=----...` itself when it sees
+        // a FormData body. Pinning a value without the boundary makes
+        // multer reject the body silently with 400.
         const { data } = await api.post<UploadedAttachment>(
           "/messages/upload",
-          form,
-          { headers: { "Content-Type": "multipart/form-data" } }
+          form
         );
         fileUrl = data.fileUrl;
         fileType = data.fileType;

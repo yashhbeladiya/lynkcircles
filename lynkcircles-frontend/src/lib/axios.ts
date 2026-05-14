@@ -9,12 +9,17 @@ import axios, { type AxiosError } from "axios";
  * withCredentials: true is required for the JWT cookie to round-trip
  * (both the HTTP API and the WebSocket auth depend on it).
  */
+/**
+ * No default Content-Type: axios sets `application/json` automatically
+ * when the request body is a plain object, AND `multipart/form-data`
+ * with the correct boundary when the body is a FormData. Pinning
+ * `application/json` here would have hidden that auto-detect and broken
+ * file uploads to /messages/upload (multer never sees a multipart body
+ * if the header is application/json).
+ */
 export const api = axios.create({
   baseURL: "/api/v1",
   withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 /**
