@@ -8,6 +8,8 @@ import Network from "@/pages/Network";
 import Works from "@/pages/Works";
 import News from "@/pages/News";
 import Messages from "@/pages/Messages";
+import { ChatPane } from "@/components/messaging/ChatPane";
+import EmptyChatPane from "@/components/messaging/EmptyChatPane";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import SignIn from "@/pages/SignIn";
@@ -50,7 +52,8 @@ function App() {
                   <Route path="/works" element={<Works />} />
                   <Route path="/news" element={<News />} />
                   <Route path="/messages" element={<Messages />}>
-                    <Route path=":peerId" element={null} />
+                    <Route index element={<EmptyChatPane />} />
+                    <Route path=":peerId" element={<ChatPane />} />
                   </Route>
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/profile/:username" element={<Profile />} />
