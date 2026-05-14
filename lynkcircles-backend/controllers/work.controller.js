@@ -50,11 +50,12 @@ export const createWork = async (req, res) => {
 
 export const getWorkPosts = async (req, res) => {
   try {
-    console.log("Get work posts");
-    const workPosts = await JobPost.find({ status: "Open" }).populate(
-      "author",
-      "firstName lastName username profilePicture"
-    );
+    const workPosts = await JobPost.find({ status: "Open" })
+      .sort({ createdAt: -1 })
+      .populate(
+        "author",
+        "firstName lastName username profilePicture verified headline"
+      );
     res.status(200).json(workPosts);
   } catch (error) {
     console.log("Error in getWorkPosts: ", error.message);
@@ -116,18 +117,32 @@ export const updateWorkPost = async (req, res) => {
         .status(403)
         .json({ message: "Not authorized to update this work post" });
     }
-    const { title, description, skillsRequired, location, pay, status, requiredOn, deadline } =
-      req.body;
-    post.title = title;
-    post.description = description;
-    post.skillsRequired = skillsRequired;
-    post.location = location;
-    post.budget = pay;
-    post.status = status;
-    post.requiredOn = requiredOn;
-    post.deadline = deadline;
+    // The schema field is `jobTitle`; the previous code wrote to a
+    // bare `title` field that mongoose silently dropped on save, so
+    // job titles were never actually editable. Map FE payload names
+    // to schema names explicitly.
+    const {
+      title,
+      description,
+      skillsRequired,
+      location,
+      pay,
+      status,
+      requiredOn,
+      deadline,
+    } = req.body;
+
+    if (title !== undefined) post.jobTitle = title;
+    if (description !== undefined) post.description = description;
+    if (skillsRequired !== undefined) post.skillsRequired = skillsRequired;
+    if (location !== undefined) post.location = location;
+    if (pay !== undefined) post.budget = pay;
+    if (status !== undefined) post.status = status;
+    if (requiredOn !== undefined) post.requiredOn = requiredOn;
+    if (deadline !== undefined) post.deadline = deadline;
+
     await post.save();
-    res.status(200).json({ message: "Work Post updated successfully" });
+    res.status(200).json(post);
   } catch (error) {
     console.log("Error in updateWorkPost: ", error.message);
     res.status(500).json({ message: "Server error" });

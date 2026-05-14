@@ -6,6 +6,7 @@ import { RedirectIfAuth } from "@/components/auth/RedirectIfAuth";
 import Home from "@/pages/Home";
 import Network from "@/pages/Network";
 import Works from "@/pages/Works";
+import WorkPage from "@/pages/WorkPage";
 import News from "@/pages/News";
 import Messages from "@/pages/Messages";
 import { ChatPane } from "@/components/messaging/ChatPane";
@@ -50,6 +51,7 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/network" element={<Network />} />
                   <Route path="/works" element={<Works />} />
+                  <Route path="/works/:workPostId" element={<WorkPage />} />
                   <Route path="/news" element={<News />} />
                   <Route path="/messages" element={<Messages />}>
                     <Route index element={<EmptyChatPane />} />
