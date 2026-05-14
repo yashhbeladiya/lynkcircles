@@ -49,7 +49,9 @@ function App() {
                   <Route path="/network" element={<Network />} />
                   <Route path="/works" element={<Works />} />
                   <Route path="/news" element={<News />} />
-                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/messages" element={<Messages />}>
+                    <Route path=":peerId" element={null} />
+                  </Route>
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/profile/:username" element={<Profile />} />
                   <Route path="*" element={<NotFound />} />

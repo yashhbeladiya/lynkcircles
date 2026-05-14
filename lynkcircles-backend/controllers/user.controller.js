@@ -99,9 +99,7 @@ export const getSuggestedConnections = async (req, res) => {
 
 export const getPublicProfile = async (req, res) => {
   try {
-    // console.log("Params: ", req.params.username);
     const username = req.params.username;
-    console.log("Username: ", username);
     const publicProfile = await User.findOne({ username }).select("-password");
     if (!publicProfile) {
       return res.status(404).json({ message: "User not found" });
@@ -110,6 +108,29 @@ export const getPublicProfile = async (req, res) => {
   } catch (error) {
     console.error("Error fetching public profile:", error);
     res.status(500).json({ message: "Error fetching public profile" });
+  }
+};
+
+/**
+ * Lightweight user lookup by ObjectId. Returns a summary suitable for
+ * chat headers, mentions, and any UI surface that has a userId but
+ * needs a name + avatar. Validates the id format up front so an
+ * arbitrary string doesn't trigger a Mongo CastError 500.
+ */
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!/^[a-f\d]{24}$/i.test(id)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+    const user = await User.findById(id).select(
+      "_id firstName lastName username profilePicture headline verified"
+    );
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching user by id:", error.message);
+    res.status(500).json({ message: "Error fetching user" });
   }
 };
 
