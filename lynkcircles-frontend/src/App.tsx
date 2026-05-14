@@ -3,83 +3,81 @@ import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useTheme } from "@mui/material/styles";
+import { ShieldCheck } from "lucide-react";
 
-import { Sun, Moon, ShieldCheck } from "lucide-react";
-import { useColorMode } from "@/hooks/useColorMode";
+import { AppShell } from "@/components/layout/AppShell";
 
 /**
- * Theme preview page. Real layout/router land in the next commits — this
- * page exists so the theme tokens are visible end-to-end (and so dark/
- * light toggle can be exercised before the rest of the UI is built).
+ * Temporary content while routing is being wired up in sub 5/5. Once
+ * the router lands, this becomes the <Routes> tree.
  */
 function App() {
-  const { mode, toggleMode } = useColorMode();
-  const theme = useTheme();
-
   return (
-    <Box
-      component="main"
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 4,
-        px: 3,
-        py: 6,
-        bgcolor: "background.default",
-        color: "text.primary",
-      }}
-    >
-      <Stack spacing={1} sx={{ alignItems: "center", textAlign: "center" }}>
-        <Typography variant="overline" color="text.secondary">
-          Phase 1b · sub 2/5
-        </Typography>
-        <Typography variant="h1" sx={{ letterSpacing: "-0.04em" }}>
-          lynkcircles
-        </Typography>
-        <Typography
-          variant="body1"
-          color="text.secondary"
-          sx={{ maxWidth: "32rem" }}
-        >
-          New design system online. Theme tokens, MUI overrides, and a
-          dark/light color mode are now wired. Layout shell and primitives
-          land in the next commits.
-        </Typography>
-      </Stack>
-
-      <Stack
-        direction="row"
-        spacing={2}
-        sx={{ alignItems: "center", flexWrap: "wrap" }}
+    <AppShell>
+      <Box
+        sx={{
+          maxWidth: 720,
+          mx: "auto",
+          px: { xs: 2, md: 3 },
+          py: { xs: 4, md: 8 },
+        }}
       >
-        <Button variant="contained" color="primary">
-          Primary action
-        </Button>
-        <Button variant="outlined">Secondary</Button>
-        <Chip
-          label="Verified worker"
-          icon={<ShieldCheck size={14} />}
-          sx={{
-            bgcolor: theme.palette.success.main,
-            color: "#fff",
-            "& .MuiChip-icon": { color: "#fff" },
-          }}
-        />
-      </Stack>
+        <Stack spacing={3}>
+          <Typography variant="overline" color="text.secondary">
+            Phase 1b · sub 3/5
+          </Typography>
+          <Typography
+            variant="h1"
+            sx={{
+              fontSize: { xs: "2rem", md: "2.5rem" },
+              letterSpacing: "-0.03em",
+            }}
+          >
+            Layout shell online.
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Top navigation on desktop, bottom tab bar on mobile, and a
+            <Box
+              component="kbd"
+              sx={{
+                fontFamily: "monospace",
+                fontSize: "0.75rem",
+                px: 0.75,
+                py: 0.125,
+                border: 1,
+                borderColor: "divider",
+                borderRadius: 0.75,
+                mx: 0.75,
+              }}
+            >
+              ⌘K
+            </Box>
+            command palette wired to a stub. Real routes, axios, and
+            react-query land in sub 5/5.
+          </Typography>
 
-      <Button
-        variant="outlined"
-        size="small"
-        onClick={toggleMode}
-        startIcon={mode === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-      >
-        Switch to {mode === "dark" ? "light" : "dark"} mode
-      </Button>
-    </Box>
+          <Stack
+            direction="row"
+            spacing={2}
+            sx={{ alignItems: "center", flexWrap: "wrap" }}
+          >
+            <Button variant="contained" color="primary">
+              Primary action
+            </Button>
+            <Button variant="outlined">Secondary</Button>
+            <Chip
+              label="Verified worker"
+              icon={<ShieldCheck size={14} />}
+              color="success"
+              sx={{
+                color: "#fff",
+                "& .MuiChip-icon": { color: "#fff" },
+              }}
+            />
+          </Stack>
+        </Stack>
+      </Box>
+    </AppShell>
   );
 }
 
