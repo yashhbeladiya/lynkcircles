@@ -12,6 +12,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { AboutSection } from "@/components/profile/AboutSection";
 import { ServicesSection } from "@/components/profile/ServicesSection";
+import { PortfolioSection } from "@/components/profile/PortfolioSection";
 import { ReviewsSection } from "@/components/profile/ReviewsSection";
 import { ActivitySection } from "@/components/profile/ActivitySection";
 import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
@@ -65,6 +66,7 @@ const Profile = () => {
       {isWorker ? (
         <>
           <ServicesSection username={profile.username} isOwn={isOwn} />
+          <PortfolioSection username={profile.username} isOwn={isOwn} />
           <ReviewsSection username={profile.username} isOwn={isOwn} />
         </>
       ) : null}

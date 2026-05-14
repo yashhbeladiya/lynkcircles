@@ -6,12 +6,14 @@ import {
   updateWorkDetail,
   deleteWorkDetail,
   getWorkDetailsbyId,
-    deleteWorkDetailbyId,
+  deleteWorkDetailbyId,
   getJobPortfolioForService,
+  getPortfolioByUsername,
   createJobPortfolio,
   updateJobPortfolio,
   deleteJobPortfolio,
   getJobPortfolioById,
+  addPortfolioReview,
   createReview,
   updateReview,
   deleteReview,
@@ -21,27 +23,34 @@ import {
 
 const router = express.Router();
 
-router.get("/:username", protectRoute, getWorkDetails);
+// IMPORTANT: every static path below must be declared BEFORE the
+// `/:username` catch-all. The previous ordering matched `jobportfolio`
+// as a username and 404'd silently on every portfolio request.
+
+// Work details (services) CRUD
 router.post("/", protectRoute, createWorkDetail);
 router.put("/update", protectRoute, updateWorkDetail);
 router.delete("/delete", protectRoute, deleteWorkDetail);
 router.delete("/delete/:id", protectRoute, deleteWorkDetailbyId);
 router.get("/id/:id", protectRoute, getWorkDetailsbyId);
 
-
-// jobportfolio routes
+// Portfolio (completed jobs) — per-user batch fetch + per-service list + CRUD
+router.get("/portfolio/user/:username", protectRoute, getPortfolioByUsername);
 router.get("/jobportfolio/:serviceId", protectRoute, getJobPortfolioForService);
 router.post("/jobportfolio", protectRoute, createJobPortfolio);
 router.put("/jobportfolio", protectRoute, updateJobPortfolio);
 router.delete("/jobportfolio/:id", protectRoute, deleteJobPortfolio);
 router.get("/jobportfolio/id/:id", protectRoute, getJobPortfolioById);
+router.post("/jobportfolio/:id/review", protectRoute, addPortfolioReview);
 
-
-// review routes
+// Service-level reviews (overall rating for a service, not per job)
 router.post("/review/:serviceId", protectRoute, createReview);
 router.put("/review/:serviceId", protectRoute, updateReview);
 router.delete("/review/:serviceId", protectRoute, deleteReview);
 router.get("/review/:serviceId", protectRoute, getReview);
 router.get("/review/:serviceId/:reviewerId", protectRoute, getReviewById);
+
+// Catch-all: all services for a username. MUST come last.
+router.get("/:username", protectRoute, getWorkDetails);
 
 export default router;

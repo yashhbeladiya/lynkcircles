@@ -100,51 +100,145 @@ export const getWorkDetailsbyId = async (req, res) => {
 
 export const getJobPortfolioForService = async (req, res) => {
     try {
-        const jobPortfolio = await JobPortfolio.find({ service: req.params.serviceId });
-        if (!jobPortfolio) {
-            return res.status(404).json({ message: "Job Portfolio not found" });
-        }
-        res.status(200).json(jobPortfolio);
+        const jobPortfolio = await JobPortfolio.find({ service: req.params.serviceId })
+            .sort({ dateCompleted: -1, createdAt: -1 })
+            .populate("reviews.reviewer", "_id firstName lastName username profilePicture verified");
+        res.status(200).json(jobPortfolio ?? []);
     } catch (error) {
         console.log("Error in getJobPortfolioForService: ", error.message);
         res.status(500).json({ message: "Server error" });
     }
 }
 
+/**
+ * Every completed job a Worker has logged, across all their services.
+ * Single round-trip (vs N+1 if the FE fetched per-service). Sorted
+ * newest-first so the most recent work leads the gallery.
+ */
+export const getPortfolioByUsername = async (req, res) => {
+    try {
+        const user = await User.findOne({ username: req.params.username }).select("_id");
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const portfolio = await JobPortfolio.find({ user: user._id })
+            .sort({ dateCompleted: -1, createdAt: -1 })
+            .populate("service", "_id serviceOffered")
+            .populate(
+                "reviews.reviewer",
+                "_id firstName lastName username profilePicture verified"
+            );
+        res.json(portfolio);
+    } catch (error) {
+        console.error("Error in getPortfolioByUsername:", error.message);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+/**
+ * Add a review to a specific completed job. Anyone signed in can leave
+ * one for now — tightening to "only the client whose username matches"
+ * is a Phase 4 hardening step. Prevents the same reviewer from leaving
+ * two reviews on the same job (use update if they want to change it).
+ */
+export const addPortfolioReview = async (req, res) => {
+    try {
+        const portfolio = await JobPortfolio.findById(req.params.id);
+        if (!portfolio) return res.status(404).json({ message: "Portfolio not found" });
+
+        if (portfolio.user.toString() === req.user._id.toString()) {
+            return res.status(403).json({ message: "You can't review your own work" });
+        }
+
+        const alreadyReviewed = portfolio.reviews.some(
+            (r) => r.reviewer.toString() === req.user._id.toString()
+        );
+        if (alreadyReviewed) {
+            return res.status(409).json({ message: "You've already reviewed this job" });
+        }
+
+        const { review, rating, images } = req.body;
+        if (!review?.trim() || typeof rating !== "number") {
+            return res.status(400).json({ message: "review and rating are required" });
+        }
+
+        portfolio.reviews.push({
+            reviewer: req.user._id,
+            review: review.trim(),
+            rating,
+            images: Array.isArray(images) ? images : [],
+        });
+
+        await portfolio.save();
+        const updated = await JobPortfolio.findById(portfolio._id).populate(
+            "reviews.reviewer",
+            "_id firstName lastName username profilePicture verified"
+        );
+        res.status(201).json(updated);
+    } catch (error) {
+        console.error("Error in addPortfolioReview:", error.message);
+        res.status(500).json({ message: "Server error" });
+    }
+};
+
+/**
+ * Create a portfolio entry. Image/video inputs are accepted as either
+ * raw URLs or base64 data URIs — anything that isn't already a Cloudinary
+ * URL gets uploaded via the buffer/data-uri path. Uploads happen in
+ * parallel so a 5-image entry doesn't serialize 5 round-trips.
+ */
 export const createJobPortfolio = async (req, res) => {
     try {
-        console.log("Create job portfolio");
         const {
             service,
             jobTitle,
             description,
-            images, // Base64 strings or URLs
-            videos, // Base64 strings or URLs
+            images = [],
+            videos = [],
             dateCompleted,
             clientUsername,
             clientName,
-            reviews
         } = req.body;
+
+        if (!service) {
+            return res.status(400).json({ message: "service is required" });
+        }
+
+        const uploadIfBase64 = async (value, folder) => {
+            if (!value || typeof value !== "string") return null;
+            // Already on cloudinary (or any external URL): pass through.
+            if (/^https?:\/\//i.test(value)) return value;
+            // Anything starting with "data:" is a base64 data URI we
+            // need to push up.
+            if (value.startsWith("data:")) {
+                return uploadToCloudinary(value, folder);
+            }
+            return null;
+        };
+
+        const uploadedImages = (
+            await Promise.all(images.map((img) => uploadIfBase64(img, "portfolio")))
+        ).filter(Boolean);
+        const uploadedVideos = (
+            await Promise.all(videos.map((vid) => uploadIfBase64(vid, "portfolio")))
+        ).filter(Boolean);
 
         const newJobPortfolio = new JobPortfolio({
             user: req.user._id,
             service,
             jobTitle,
             description,
-            images,
-            videos,
-            dateCompleted,
+            images: uploadedImages,
+            videos: uploadedVideos,
+            dateCompleted: dateCompleted || undefined,
             clientUsername,
             clientName,
-            reviews,
+            reviews: [],
         });
 
-        console.log("images type: ", typeof images);
-
         await newJobPortfolio.save();
-        res.status(201).json({ message: "Job Portfolio created successfully" });
+        res.status(201).json(newJobPortfolio);
     } catch (error) {
-        console.log("Error in createJobPortfolio: ", error.message);
+        console.error("Error in createJobPortfolio:", error.message);
         res.status(500).json({ message: "Server error" });
     }
 };
