@@ -19,15 +19,37 @@ const parseCookie = (cookieHeader, name) => {
   return match ? decodeURIComponent(match[1]) : null;
 };
 
-const upsertConversation = (a, b, lastMessageId) =>
-  Conversation.findOneAndUpdate(
-    { participants: { $all: [a, b] }, isGroup: { $ne: true } },
+/**
+ * Find-then-update-or-create. We CAN'T use a single `findOneAndUpdate`
+ * with `upsert: true` here because the filter uses `participants: {$all}`
+ * and `$setOnInsert` also references `participants` — MongoDB refuses
+ * with "cannot infer query fields to set, path 'participants' is matched
+ * twice" and the whole privateMessage handler aborts before emitting
+ * the real-time events. That's the exact bug that made "you must reload
+ * to see new messages" reproduce: the save succeeded, the emit didn't.
+ *
+ * Two-step pattern avoids the inference conflict entirely. Race window
+ * between the find and create is small and the worst case is one extra
+ * Conversation row, not data loss. A unique compound index on
+ * participants would close it; deferring that to Phase 4 hardening.
+ */
+const upsertConversation = async (a, b, lastMessageId) => {
+  const existing = await Conversation.findOneAndUpdate(
     {
-      $setOnInsert: { participants: [a, b], isGroup: false },
-      $set: { lastMessage: lastMessageId },
+      isGroup: { $ne: true },
+      participants: { $size: 2, $all: [a, b] },
     },
-    { upsert: true, new: true }
+    { $set: { lastMessage: lastMessageId } },
+    { new: true }
   );
+  if (existing) return existing;
+
+  return Conversation.create({
+    participants: [a, b],
+    isGroup: false,
+    lastMessage: lastMessageId,
+  });
+};
 
 const initializeSocket = (server) => {
   const allowedOrigin = isDev
@@ -116,7 +138,15 @@ const initializeSocket = (server) => {
           fileType: fileType || null,
         });
 
-        await upsertConversation(socket.user._id, recipientId, message._id);
+        // Conversation upsert is best-effort: if it fails, the message
+        // itself is already persisted and we still want the recipient
+        // to see it in real time. The conversation list will catch up
+        // on its next refetch.
+        try {
+          await upsertConversation(socket.user._id, recipientId, message._id);
+        } catch (convErr) {
+          console.warn("upsertConversation failed (non-fatal):", convErr.message);
+        }
 
         const populated = await message.populate("sender", SENDER_FIELDS);
         const payload = { message: populated, tempId };

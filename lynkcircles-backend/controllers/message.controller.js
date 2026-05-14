@@ -5,15 +5,31 @@ import { uploadBufferToCloudinary } from "../util/util.js";
 
 const SENDER_FIELDS = "_id firstName lastName username profilePicture";
 
-const upsertConversation = async (userA, userB, lastMessageId) =>
-  Conversation.findOneAndUpdate(
-    { participants: { $all: [userA, userB] }, isGroup: { $ne: true } },
+/**
+ * Find-then-update-or-create. See the matching helper in lib/socket.js
+ * for the full explanation — TL;DR: MongoDB rejects a single
+ * findOneAndUpdate(upsert) when `participants` appears in both the
+ * filter (via $all) and $setOnInsert ("path matched twice"), and that
+ * exception was tearing down the message-send flow before the realtime
+ * emit could fire.
+ */
+const upsertConversation = async (userA, userB, lastMessageId) => {
+  const existing = await Conversation.findOneAndUpdate(
     {
-      $setOnInsert: { participants: [userA, userB], isGroup: false },
-      $set: { lastMessage: lastMessageId },
+      isGroup: { $ne: true },
+      participants: { $size: 2, $all: [userA, userB] },
     },
-    { upsert: true, new: true }
+    { $set: { lastMessage: lastMessageId } },
+    { new: true }
   );
+  if (existing) return existing;
+
+  return Conversation.create({
+    participants: [userA, userB],
+    isGroup: false,
+    lastMessage: lastMessageId,
+  });
+};
 
 export const createMessage = async (req, res) => {
   try {
@@ -33,7 +49,11 @@ export const createMessage = async (req, res) => {
       fileType: fileType || null,
     });
 
-    await upsertConversation(req.user._id, recipientId, message._id);
+    try {
+      await upsertConversation(req.user._id, recipientId, message._id);
+    } catch (convErr) {
+      console.warn("upsertConversation failed (non-fatal):", convErr.message);
+    }
 
     const populated = await message.populate("sender", SENDER_FIELDS);
     res.status(201).json(populated);
