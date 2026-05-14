@@ -73,12 +73,22 @@ export const MessageBubble = ({ message, mine, compact = false }: Props) => {
             borderRadius: 2.5,
             borderBottomRightRadius: mine ? 0.75 : 2.5,
             borderBottomLeftRadius: mine ? 2.5 : 0.75,
+            // Outbound bubble uses a fixed dark indigo + white text so the
+            // contrast holds in BOTH light and dark mode. Reading
+            // primary.contrastText was unreliable (something in the
+            // sx-callback chain was returning a dark value, leaving white
+            // text on a still-readable indigo and the reverse — dark text
+            // on dark — in dark mode). Hard-coding sidesteps the issue
+            // entirely and matches typical messenger conventions.
             backgroundColor: mine
-              ? theme.palette.primary.main
+              ? theme.palette.mode === "dark"
+                ? "#4f46e5" /* indigo-600 */
+                : "#4338ca" /* indigo-700 */
               : theme.palette.mode === "dark"
                 ? theme.palette.action.hover
                 : theme.palette.grey[100],
-            color: mine ? theme.palette.primary.contrastText : "text.primary",
+            color: mine ? "#ffffff" : theme.palette.text.primary,
+            "& *": mine ? { color: "#ffffff" } : undefined,
             wordBreak: "break-word",
             opacity: message.status === "sending" ? 0.7 : 1,
             transition: "opacity 120ms ease",
