@@ -4,11 +4,12 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import Avatar from "@mui/material/Avatar";
+import { NavLink, Link as RouterLink, useResolvedPath, useMatch } from "react-router-dom";
 import { Moon, Sun, Search } from "lucide-react";
 
 import { Logo } from "./Logo";
-import { NAV_ITEMS } from "./navItems";
+import { NAV_ITEMS, type NavItem } from "./navItems";
+import { UserMenu } from "./UserMenu";
 import { useColorMode } from "@/hooks/useColorMode";
 
 const HEADER_HEIGHT = 60;
@@ -17,13 +18,42 @@ interface Props {
   onOpenCommandPalette: () => void;
 }
 
+const NavIconLink = ({ item }: { item: NavItem }) => {
+  const Icon = item.icon;
+  const resolved = useResolvedPath(item.href);
+  const matched = useMatch({
+    path: resolved.pathname,
+    end: item.href === "/",
+  });
+  const active = Boolean(matched);
+
+  return (
+    <Tooltip title={item.label} placement="bottom">
+      <IconButton
+        component={NavLink}
+        to={item.href}
+        size="medium"
+        sx={{
+          color: active ? "primary.main" : "text.secondary",
+          backgroundColor: active ? "action.selected" : "transparent",
+          borderRadius: 1.5,
+          "&:hover": {
+            color: active ? "primary.main" : "text.primary",
+            backgroundColor: "action.hover",
+          },
+        }}
+        aria-label={item.label}
+        aria-current={active ? "page" : undefined}
+      >
+        <Icon size={18} aria-hidden />
+      </IconButton>
+    </Tooltip>
+  );
+};
+
 /**
  * Desktop / tablet top navigation. Hidden on mobile (<md breakpoint),
  * where the BottomTabBar takes over.
- *
- * Nav items are static <a> tags in this commit — they become react-
- * router NavLinks in sub 5/5 once routing is wired. That's intentional:
- * this commit can be reviewed in isolation without router knowledge.
  */
 export const TopNav = ({ onOpenCommandPalette }: Props) => {
   const { mode, toggleMode } = useColorMode();
@@ -47,7 +77,11 @@ export const TopNav = ({ onOpenCommandPalette }: Props) => {
           px: { md: 3, lg: 4 },
         }}
       >
-        <Box component="a" href="/" sx={{ textDecoration: "none" }}>
+        <Box
+          component={RouterLink}
+          to="/"
+          sx={{ textDecoration: "none", color: "inherit" }}
+        >
           <Logo />
         </Box>
 
@@ -109,29 +143,9 @@ export const TopNav = ({ onOpenCommandPalette }: Props) => {
             alignItems: "center",
           }}
         >
-          {NAV_ITEMS.filter((item) => item.desktop).map((item) => {
-            const Icon = item.icon;
-            return (
-              <Tooltip key={item.href} title={item.label} placement="bottom">
-                <IconButton
-                  component="a"
-                  href={item.href}
-                  size="medium"
-                  sx={{
-                    color: "text.secondary",
-                    borderRadius: 1.5,
-                    "&:hover": {
-                      color: "text.primary",
-                      backgroundColor: "action.hover",
-                    },
-                  }}
-                  aria-label={item.label}
-                >
-                  <Icon size={18} aria-hidden />
-                </IconButton>
-              </Tooltip>
-            );
-          })}
+          {NAV_ITEMS.filter((item) => item.desktop).map((item) => (
+            <NavIconLink key={item.href} item={item} />
+          ))}
 
           <Box sx={{ width: 1, height: 24, bgcolor: "divider", mx: 1 }} />
 
@@ -156,26 +170,7 @@ export const TopNav = ({ onOpenCommandPalette }: Props) => {
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Your profile">
-            <IconButton
-              size="small"
-              sx={{ ml: 0.5, p: 0.25 }}
-              aria-label="Open profile menu"
-            >
-              <Avatar
-                sx={{
-                  width: 30,
-                  height: 30,
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  bgcolor: "primary.main",
-                  color: "primary.contrastText",
-                }}
-              >
-                YB
-              </Avatar>
-            </IconButton>
-          </Tooltip>
+          <UserMenu />
         </Stack>
       </Toolbar>
     </AppBar>

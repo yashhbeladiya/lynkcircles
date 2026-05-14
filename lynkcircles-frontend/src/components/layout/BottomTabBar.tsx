@@ -1,17 +1,54 @@
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import { NAV_ITEMS } from "./navItems";
+import { NavLink, useResolvedPath, useMatch } from "react-router-dom";
+import { NAV_ITEMS, type NavItem } from "./navItems";
 
 const BAR_HEIGHT = 64;
 
+const Tab = ({ item }: { item: NavItem }) => {
+  const Icon = item.icon;
+  const resolved = useResolvedPath(item.href);
+  const matched = useMatch({
+    path: resolved.pathname,
+    end: item.href === "/",
+  });
+  const active = Boolean(matched);
+
+  return (
+    <Box
+      component={NavLink}
+      to={item.href}
+      sx={{
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        textDecoration: "none",
+        color: active ? "primary.main" : "text.secondary",
+        gap: 0.5,
+        minHeight: 44,
+        transition: "color 120ms ease",
+        "&:hover": { color: active ? "primary.main" : "text.primary" },
+      }}
+      aria-label={item.label}
+      aria-current={active ? "page" : undefined}
+    >
+      <Icon size={20} aria-hidden />
+      <Typography
+        variant="caption"
+        sx={{ fontSize: "0.6875rem", fontWeight: active ? 600 : 500 }}
+      >
+        {item.label}
+      </Typography>
+    </Box>
+  );
+};
+
 /**
- * Mobile bottom tab bar. Shows on <md breakpoints only. Picks the 5
- * highest-priority items (Home / Network / Works / Messages / one
- * extra) so we never overflow horizontally on a 320px viewport.
- *
- * Routing is wired in sub 5/5 — for now these are plain <a> tags so
- * the visual + a11y can be reviewed in isolation.
+ * Mobile bottom tab bar. Shows on <md breakpoints only. Picks up to
+ * 5 mobile-flagged items from navItems.ts.
  */
 export const BottomTabBar = () => {
   const items = NAV_ITEMS.filter((item) => item.mobile).slice(0, 5);
@@ -32,44 +69,13 @@ export const BottomTabBar = () => {
         borderTop: 1,
         borderColor: "divider",
         backgroundColor: "background.default",
-        // Honor iOS safe area so the bar doesn't sit behind the home
-        // indicator on iPhones.
         pb: "env(safe-area-inset-bottom)",
         zIndex: (theme) => theme.zIndex.appBar,
       }}
     >
-      {items.map((item) => {
-        const Icon = item.icon;
-        return (
-          <Box
-            key={item.href}
-            component="a"
-            href={item.href}
-            sx={{
-              flex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              textDecoration: "none",
-              color: "text.secondary",
-              gap: 0.5,
-              minHeight: 44,
-              "&:hover": { color: "text.primary" },
-              "&:active": { color: "primary.main" },
-            }}
-            aria-label={item.label}
-          >
-            <Icon size={20} aria-hidden />
-            <Typography
-              variant="caption"
-              sx={{ fontSize: "0.6875rem", fontWeight: 500 }}
-            >
-              {item.label}
-            </Typography>
-          </Box>
-        );
-      })}
+      {items.map((item) => (
+        <Tab key={item.href} item={item} />
+      ))}
     </Paper>
   );
 };

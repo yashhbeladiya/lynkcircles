@@ -1,5 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "react-hot-toast";
 
 import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
@@ -7,6 +9,9 @@ import "@fontsource-variable/jetbrains-mono";
 import "./index.css";
 import App from "./App";
 import { ThemeProvider } from "./theme/ThemeProvider";
+import { createQueryClient } from "./lib/queryClient";
+
+const queryClient = createQueryClient();
 
 const rootEl = document.getElementById("root");
 if (!rootEl) {
@@ -15,8 +20,20 @@ if (!rootEl) {
 
 createRoot(rootEl).render(
   <StrictMode>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <App />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              fontSize: "0.875rem",
+              borderRadius: 8,
+            },
+          }}
+        />
+      </ThemeProvider>
+    </QueryClientProvider>
   </StrictMode>
 );
