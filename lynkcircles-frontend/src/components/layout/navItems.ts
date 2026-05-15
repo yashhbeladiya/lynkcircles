@@ -35,6 +35,8 @@ export const NAV_ITEMS: NavItem[] = [
     href: "/notifications",
     icon: Bell,
     desktop: true,
-    mobile: false,
+    // Surfaced on mobile too — without a visible entry point on small
+    // screens, the bell is unreachable and the unread badge is invisible.
+    mobile: true,
   },
 ];

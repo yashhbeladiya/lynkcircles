@@ -1,5 +1,6 @@
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
+import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
@@ -11,6 +12,7 @@ import { Logo } from "./Logo";
 import { NAV_ITEMS, type NavItem } from "./navItems";
 import { UserMenu } from "./UserMenu";
 import { useColorMode } from "@/hooks/useColorMode";
+import { useUnreadNotificationCount } from "@/hooks/useNotifications";
 
 const HEADER_HEIGHT = 60;
 
@@ -18,7 +20,14 @@ interface Props {
   onOpenCommandPalette: () => void;
 }
 
-const NavIconLink = ({ item }: { item: NavItem }) => {
+interface NavIconLinkProps {
+  item: NavItem;
+  /** Count to badge the icon with — only renders when > 0. Used for
+   *  the Notifications bell so unread state is visible in the chrome. */
+  badgeCount?: number;
+}
+
+const NavIconLink = ({ item, badgeCount = 0 }: NavIconLinkProps) => {
   const Icon = item.icon;
   const resolved = useResolvedPath(item.href);
   const matched = useMatch({
@@ -42,10 +51,30 @@ const NavIconLink = ({ item }: { item: NavItem }) => {
             backgroundColor: "action.hover",
           },
         }}
-        aria-label={item.label}
+        aria-label={
+          badgeCount > 0 ? `${item.label} (${badgeCount} unread)` : item.label
+        }
         aria-current={active ? "page" : undefined}
       >
-        <Icon size={18} aria-hidden />
+        <Badge
+          color="error"
+          badgeContent={badgeCount}
+          max={9}
+          overlap="circular"
+          invisible={badgeCount === 0}
+          slotProps={{
+            badge: {
+              style: {
+                fontSize: "0.625rem",
+                height: 14,
+                minWidth: 14,
+                padding: "0 4px",
+              },
+            },
+          }}
+        >
+          <Icon size={18} aria-hidden />
+        </Badge>
       </IconButton>
     </Tooltip>
   );
@@ -57,6 +86,7 @@ const NavIconLink = ({ item }: { item: NavItem }) => {
  */
 export const TopNav = ({ onOpenCommandPalette }: Props) => {
   const { mode, toggleMode } = useColorMode();
+  const unread = useUnreadNotificationCount();
   const isMac =
     typeof navigator !== "undefined" && /Mac/.test(navigator.platform);
 
@@ -144,7 +174,11 @@ export const TopNav = ({ onOpenCommandPalette }: Props) => {
           }}
         >
           {NAV_ITEMS.filter((item) => item.desktop).map((item) => (
-            <NavIconLink key={item.href} item={item} />
+            <NavIconLink
+              key={item.href}
+              item={item}
+              badgeCount={item.href === "/notifications" ? unread : 0}
+            />
           ))}
 
           <Box sx={{ width: 1, height: 24, bgcolor: "divider", mx: 1 }} />

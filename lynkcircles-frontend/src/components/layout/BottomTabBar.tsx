@@ -1,12 +1,19 @@
+import Badge from "@mui/material/Badge";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import { NavLink, useResolvedPath, useMatch } from "react-router-dom";
 import { NAV_ITEMS, type NavItem } from "./navItems";
+import { useUnreadNotificationCount } from "@/hooks/useNotifications";
 
 const BAR_HEIGHT = 64;
 
-const Tab = ({ item }: { item: NavItem }) => {
+interface TabProps {
+  item: NavItem;
+  badgeCount?: number;
+}
+
+const Tab = ({ item, badgeCount = 0 }: TabProps) => {
   const Icon = item.icon;
   const resolved = useResolvedPath(item.href);
   const matched = useMatch({
@@ -32,10 +39,30 @@ const Tab = ({ item }: { item: NavItem }) => {
         transition: "color 120ms ease",
         "&:hover": { color: active ? "primary.main" : "text.primary" },
       }}
-      aria-label={item.label}
+      aria-label={
+        badgeCount > 0 ? `${item.label} (${badgeCount} unread)` : item.label
+      }
       aria-current={active ? "page" : undefined}
     >
-      <Icon size={20} aria-hidden />
+      <Badge
+        color="error"
+        badgeContent={badgeCount}
+        max={9}
+        overlap="circular"
+        invisible={badgeCount === 0}
+        slotProps={{
+          badge: {
+            style: {
+              fontSize: "0.625rem",
+              height: 14,
+              minWidth: 14,
+              padding: "0 4px",
+            },
+          },
+        }}
+      >
+        <Icon size={20} aria-hidden />
+      </Badge>
       <Typography
         variant="caption"
         sx={{ fontSize: "0.6875rem", fontWeight: active ? 600 : 500 }}
@@ -48,10 +75,13 @@ const Tab = ({ item }: { item: NavItem }) => {
 
 /**
  * Mobile bottom tab bar. Shows on <md breakpoints only. Picks up to
- * 5 mobile-flagged items from navItems.ts.
+ * 5 mobile-flagged items from navItems.ts and badges the bell with
+ * the unread-notification count so mobile users get the same signal
+ * desktop users get from the TopNav.
  */
 export const BottomTabBar = () => {
   const items = NAV_ITEMS.filter((item) => item.mobile).slice(0, 5);
+  const unread = useUnreadNotificationCount();
 
   return (
     <Paper
@@ -74,7 +104,11 @@ export const BottomTabBar = () => {
       }}
     >
       {items.map((item) => (
-        <Tab key={item.href} item={item} />
+        <Tab
+          key={item.href}
+          item={item}
+          badgeCount={item.href === "/notifications" ? unread : 0}
+        />
       ))}
     </Paper>
   );
