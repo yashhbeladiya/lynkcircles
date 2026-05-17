@@ -35,18 +35,27 @@ export interface ServiceReview {
 export interface WorkDetail {
   _id: string;
   user: UserSummary;
+  /** Canonical service slug from the catalog. May be undefined on
+   *  legacy records that pre-date the taxonomy migration — in that
+   *  case `serviceOffered` carries the display label. */
+  serviceKey?: string;
+  /** Display label snapshot — either the catalog label for serviceKey
+   *  at write time, or the legacy free-text value. */
   serviceOffered: string;
   description?: string;
   hourlyRate?: number;
+  currency?: string;
   availability?: Availability;
   ratings?: number;
   reviews: ServiceReview[];
 }
 
 export interface CreateWorkDetailInput {
-  serviceOffered: string;
+  /** Pick from the service catalog. Required for new entries. */
+  serviceKey: string;
   description?: string;
   hourlyRate?: number;
+  currency?: string;
 }
 
 /**

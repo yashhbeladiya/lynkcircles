@@ -17,6 +17,30 @@ const ratingLabel = (s: WorkDetail) => {
   return `${avg.toFixed(1)} · ${count} review${count === 1 ? "" : "s"}`;
 };
 
+/**
+ * Symbol for common currencies in the marketplace. Falls back to the
+ * code itself (e.g. "AUD ") for currencies without an established
+ * single-character glyph. Will be replaced by Intl.NumberFormat-based
+ * localized formatting once the i18n scaffold lands.
+ */
+const currencySymbol = (code?: string): string => {
+  switch (code) {
+    case "USD":
+      return "$";
+    case "EUR":
+      return "€";
+    case "GBP":
+      return "£";
+    case undefined:
+    case null:
+    case "":
+    case "INR":
+      return "₹";
+    default:
+      return `${code} `;
+  }
+};
+
 export const ServiceCard = ({ service, canManage, onDelete }: Props) => {
   const hasReviews = (service.reviews?.length ?? 0) > 0;
 
@@ -118,7 +142,8 @@ export const ServiceCard = ({ service, canManage, onDelete }: Props) => {
             variant="body2"
             sx={{ fontWeight: 600, fontSize: "0.9375rem" }}
           >
-            ${service.hourlyRate}
+            {currencySymbol(service.currency)}
+            {service.hourlyRate}
           </Typography>
           <Typography
             variant="caption"

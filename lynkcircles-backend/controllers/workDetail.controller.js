@@ -1,24 +1,53 @@
 import WorkDetail from "../models/workdetail.model.js";
 import JobPortfolio from "../models/jobportfolio.model.js";
 import User from "../models/user.model.js";
+import { uploadToCloudinary } from "../util/util.js";
+import { isValidServiceKey, lookupService } from "../lib/serviceCatalog.js";
 
 export const createWorkDetail = async (req, res) => {
-    try {
-        const { serviceOffered, description, hourlyRate, availability } = req.body;
-        const newWorkDetail = new WorkDetail({
-        user: req.user._id,
-        description,
-        serviceOffered,
-        hourlyRate,
-        availability,
-        });
-        await newWorkDetail.save();
-        res.status(201).json({ message: "Work detail created successfully" });
-    } catch (error) {
-        console.log("Error in createWorkDetail: ", error.message);
-        res.status(500).json({ message: "Server error" });
+  try {
+    const { serviceKey, description, hourlyRate, currency, availability } =
+      req.body;
+
+    // Service must come from the canonical catalog now — free-text
+    // would defeat the whole point of having a taxonomy.
+    if (!serviceKey || !isValidServiceKey(serviceKey)) {
+      return res
+        .status(400)
+        .json({ message: "Pick a valid service from the catalog" });
     }
-    };
+
+    // Block duplicate services per user — listing the same offering
+    // twice would inflate portfolio rollups and break matching counts.
+    const existing = await WorkDetail.findOne({
+      user: req.user._id,
+      serviceKey,
+    });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "You already offer this service" });
+    }
+
+    const service = lookupService(serviceKey);
+    const newWorkDetail = await WorkDetail.create({
+      user: req.user._id,
+      serviceKey,
+      // Snapshot the label at write time so old data renders OK even if
+      // we ever relabel a catalog entry.
+      serviceOffered: service?.label ?? serviceKey,
+      description,
+      hourlyRate,
+      currency: currency || "INR",
+      availability,
+    });
+
+    res.status(201).json(newWorkDetail);
+  } catch (error) {
+    console.log("Error in createWorkDetail: ", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 export const getWorkDetails = async (req, res) => {
     try {
