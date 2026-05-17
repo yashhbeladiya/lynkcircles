@@ -33,10 +33,23 @@ export const getNews = async (req, res) => {
       Chinese: "zh",
     };
 
+    // `datePublished` is optional from the FE; if missing default to
+    // the last 14 days. Splitting on "T" of an undefined value crashed
+    // the whole endpoint before — broke News for any caller that
+    // didn't bother sending a date.
+    const fromDate = (() => {
+      if (datePublished && typeof datePublished === "string" && datePublished.includes("T")) {
+        return datePublished.split("T")[0];
+      }
+      const d = new Date();
+      d.setDate(d.getDate() - 14);
+      return d.toISOString().split("T")[0];
+    })();
+
     const params = {
-        keyword: keyword || "latest",
+      keyword: keyword || "latest",
       country: countryMap[place] || "us",
-      from: datePublished.split("T")[0],
+      from: fromDate,
       language: languageMap[language] || "en",
       apiKey: process.env.NEWS_API,
     };
