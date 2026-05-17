@@ -4,6 +4,10 @@ import WorkDetail from "../models/workdetail.model.js";
 import Notification from "../models/notification.model.js";
 import { isValidServiceKey } from "../lib/serviceCatalog.js";
 
+const VALID_JOB_TYPES = ["gig", "recurring", "employment"];
+const VALID_FREQUENCIES = ["daily", "weekly", "bi-weekly", "monthly"];
+const VALID_SCHEDULES = ["full-time", "part-time"];
+
 export const createWork = async (req, res) => {
   try {
     const {
@@ -16,6 +20,10 @@ export const createWork = async (req, res) => {
       status,
       requiredOn,
       deadline,
+      jobType,
+      frequency,
+      experienceMinYears,
+      schedule,
     } = req.body;
 
     // Drop unknown service keys defensively — the FE picker enforces
@@ -193,6 +201,10 @@ export const updateWorkPost = async (req, res) => {
       status,
       requiredOn,
       deadline,
+      jobType,
+      frequency,
+      experienceMinYears,
+      schedule,
     } = req.body;
 
     if (title !== undefined) post.jobTitle = title;
@@ -217,6 +229,23 @@ export const updateWorkPost = async (req, res) => {
     if (status !== undefined) post.status = status;
     if (requiredOn !== undefined) post.requiredOn = requiredOn;
     if (deadline !== undefined) post.deadline = deadline;
+    if (jobType !== undefined && VALID_JOB_TYPES.includes(jobType)) {
+      post.jobType = jobType;
+    }
+    if (frequency !== undefined) {
+      post.frequency = VALID_FREQUENCIES.includes(frequency)
+        ? frequency
+        : undefined;
+    }
+    if (experienceMinYears !== undefined) {
+      post.experienceMinYears =
+        typeof experienceMinYears === "number" && experienceMinYears >= 0
+          ? experienceMinYears
+          : undefined;
+    }
+    if (schedule !== undefined) {
+      post.schedule = VALID_SCHEDULES.includes(schedule) ? schedule : undefined;
+    }
 
     await post.save();
     res.status(200).json(post);

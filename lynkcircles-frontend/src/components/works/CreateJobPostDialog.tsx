@@ -9,12 +9,19 @@ import Chip from "@mui/material/Chip";
 import ListSubheader from "@mui/material/ListSubheader";
 import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { useCreateJobPost } from "@/hooks/useJobPosts";
 import { useServiceCatalog } from "@/hooks/useServiceCatalog";
 import { serviceLabel } from "@/data/serviceCatalog";
+import type {
+  JobFrequency,
+  JobSchedule,
+  JobType,
+} from "@/types/jobPost";
 
 interface Props {
   open: boolean;
@@ -32,8 +39,27 @@ interface Props {
  *     a Worker can tell at a glance which line items the matcher
  *     actually scored against.
  */
+// Date-label maps per job type — same `requiredOn` field, three
+// different things depending on what kind of job this is.
+const REQUIRED_ON_LABEL: Record<JobType, string> = {
+  gig: "Needed by",
+  recurring: "Start date",
+  employment: "Start date",
+};
+const BUDGET_PLACEHOLDER: Record<JobType, string> = {
+  gig: "₹500 fixed, or ₹25/hr",
+  recurring: "₹3,000 / month",
+  employment: "₹20,000/month + bonus, or ₹2.5L/yr",
+};
+const BUDGET_LABEL: Record<JobType, string> = {
+  gig: "Budget",
+  recurring: "Pay (per period)",
+  employment: "Salary",
+};
+
 export const CreateJobPostDialog = ({ open, onClose }: Props) => {
   const { data: categories } = useServiceCatalog();
+  const [jobType, setJobType] = useState<JobType>("gig");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [serviceKeys, setServiceKeys] = useState<string[]>([]);
@@ -43,10 +69,15 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
   const [pay, setPay] = useState("");
   const [requiredOn, setRequiredOn] = useState("");
   const [deadline, setDeadline] = useState("");
+  // Type-conditional fields
+  const [frequency, setFrequency] = useState<JobFrequency>("monthly");
+  const [schedule, setSchedule] = useState<JobSchedule>("full-time");
+  const [experienceMinYears, setExperienceMinYears] = useState("");
   const create = useCreateJobPost();
 
   useEffect(() => {
     if (!open) return;
+    setJobType("gig");
     setTitle("");
     setDescription("");
     setServiceKeys([]);
@@ -56,6 +87,9 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
     setPay("");
     setRequiredOn("");
     setDeadline("");
+    setFrequency("monthly");
+    setSchedule("full-time");
+    setExperienceMinYears("");
   }, [open]);
 
   const addSkill = () => {
@@ -88,9 +122,20 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!canSubmit) return;
+    const exp = Number(experienceMinYears);
     await create.mutateAsync({
       title: title.trim(),
       description: description.trim(),
+      jobType,
+      // Only send type-conditional fields when they apply — keeps the
+      // payload clean and the server-side validation rules simple.
+      ...(jobType === "recurring" ? { frequency } : {}),
+      ...(jobType === "employment"
+        ? {
+            schedule,
+            experienceMinYears: Number.isFinite(exp) && exp >= 0 ? exp : undefined,
+          }
+        : {}),
       serviceKeys,
       skills,
       location: location.trim(),
@@ -128,9 +173,55 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
       <form onSubmit={handleSubmit}>
         <DialogTitle>Post a job</DialogTitle>
         <DialogContent dividers sx={{ display: "grid", gap: 1.5, pt: 2 }}>
+          {/* Job type — sets the shape of the rest of the form. Pinned
+              at top so a Client picks "is this a one-off, a recurring
+              gig, or a hire?" before filling anything else in. */}
+          <Box>
+            <Typography
+              variant="overline"
+              sx={{ color: "text.secondary", display: "block", mb: 0.5 }}
+            >
+              Job type
+            </Typography>
+            <ToggleButtonGroup
+              value={jobType}
+              exclusive
+              onChange={(_, v) => v && setJobType(v as JobType)}
+              size="small"
+              fullWidth
+            >
+              <ToggleButton value="gig" sx={{ fontSize: "0.75rem", py: 1 }}>
+                One-off gig
+              </ToggleButton>
+              <ToggleButton value="recurring" sx={{ fontSize: "0.75rem", py: 1 }}>
+                Recurring
+              </ToggleButton>
+              <ToggleButton value="employment" sx={{ fontSize: "0.75rem", py: 1 }}>
+                Employment
+              </ToggleButton>
+            </ToggleButtonGroup>
+            <Typography
+              variant="caption"
+              sx={{ color: "text.tertiary", fontSize: "0.6875rem", mt: 0.5, display: "block" }}
+            >
+              {jobType === "gig" &&
+                "One-time work — fix something, install something, finish a task."}
+              {jobType === "recurring" &&
+                "Repeating service — weekly cleaning, daily cook, monthly maintenance."}
+              {jobType === "employment" &&
+                "Hire someone — full-time or part-time role with a salary."}
+            </Typography>
+          </Box>
+
           <TextField
             label="Job title"
-            placeholder="e.g. Install kitchen cabinets — 1-day job"
+            placeholder={
+              jobType === "employment"
+                ? "e.g. Embroidery machine operator — 2 yrs exp"
+                : jobType === "recurring"
+                  ? "e.g. Twice-weekly house cleaning"
+                  : "e.g. Install kitchen cabinets — 1-day job"
+            }
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -192,6 +283,54 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
             {flatOptions}
           </TextField>
 
+          {/* Type-conditional fields. Surface only what's relevant to
+              the kind of job being posted. */}
+          {jobType === "recurring" ? (
+            <TextField
+              select
+              label="Frequency"
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value as JobFrequency)}
+              fullWidth
+            >
+              <MenuItem value="daily">Daily</MenuItem>
+              <MenuItem value="weekly">Weekly</MenuItem>
+              <MenuItem value="bi-weekly">Bi-weekly</MenuItem>
+              <MenuItem value="monthly">Monthly</MenuItem>
+            </TextField>
+          ) : null}
+
+          {jobType === "employment" ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                gap: 1.5,
+              }}
+            >
+              <TextField
+                select
+                label="Schedule"
+                value={schedule}
+                onChange={(e) => setSchedule(e.target.value as JobSchedule)}
+                fullWidth
+              >
+                <MenuItem value="full-time">Full-time</MenuItem>
+                <MenuItem value="part-time">Part-time</MenuItem>
+              </TextField>
+              <TextField
+                label="Experience (years)"
+                placeholder="0"
+                value={experienceMinYears}
+                onChange={(e) =>
+                  setExperienceMinYears(e.target.value.replace(/[^0-9.]/g, ""))
+                }
+                inputMode="numeric"
+                fullWidth
+              />
+            </Box>
+          ) : null}
+
           <Box>
             <TextField
               label="Extra requirements (optional)"
@@ -234,15 +373,15 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
               fullWidth
             />
             <TextField
-              label="Budget"
-              placeholder="₹500 fixed, ₹25/hr, ₹20,000/month + bonus"
+              label={BUDGET_LABEL[jobType]}
+              placeholder={BUDGET_PLACEHOLDER[jobType]}
               value={pay}
               onChange={(e) => setPay(e.target.value)}
               required
               fullWidth
             />
             <TextField
-              label="Needed by"
+              label={REQUIRED_ON_LABEL[jobType]}
               type="date"
               value={requiredOn}
               onChange={(e) => setRequiredOn(e.target.value)}

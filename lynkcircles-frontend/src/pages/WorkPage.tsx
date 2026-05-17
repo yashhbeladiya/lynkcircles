@@ -206,12 +206,45 @@ const WorkPage = () => {
             borderColor: "divider",
           }}
         >
-          <MetaTile icon={<Wallet size={14} aria-hidden />} label="Budget" value={job.budget} />
+          <MetaTile
+            icon={<Wallet size={14} aria-hidden />}
+            label={
+              job.jobType === "employment"
+                ? "Salary"
+                : job.jobType === "recurring"
+                  ? "Pay"
+                  : "Budget"
+            }
+            value={job.budget}
+          />
           <MetaTile icon={<MapPin size={14} aria-hidden />} label="Location" value={job.location} />
+          {job.jobType === "recurring" && job.frequency ? (
+            <MetaTile
+              icon={<Calendar size={14} aria-hidden />}
+              label="Frequency"
+              value={job.frequency}
+            />
+          ) : null}
+          {job.jobType === "employment" && job.schedule ? (
+            <MetaTile
+              icon={<Briefcase size={14} aria-hidden />}
+              label="Schedule"
+              value={job.schedule}
+            />
+          ) : null}
+          {job.jobType === "employment" && typeof job.experienceMinYears === "number" ? (
+            <MetaTile
+              icon={<Briefcase size={14} aria-hidden />}
+              label="Experience"
+              value={`${job.experienceMinYears}+ yrs`}
+            />
+          ) : null}
           {job.requiredOn ? (
             <MetaTile
               icon={<Calendar size={14} aria-hidden />}
-              label="Needed by"
+              label={
+                job.jobType === "gig" || !job.jobType ? "Needed by" : "Start date"
+              }
               value={format(new Date(job.requiredOn), "MMM d, yyyy")}
             />
           ) : null}

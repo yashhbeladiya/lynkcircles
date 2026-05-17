@@ -27,6 +27,12 @@ const statusTone = (status: JobStatus): "trust" | "info" | "warning" | "neutral"
   }
 };
 
+const TYPE_LABEL: Record<NonNullable<JobPost["jobType"]>, string> = {
+  gig: "Gig",
+  recurring: "Recurring",
+  employment: "Hiring",
+};
+
 /**
  * Marketplace job-board tile. Built for scanability: headline + budget
  * + location + how many people have already applied are all visible
@@ -58,6 +64,22 @@ export const JobPostCard = ({ job }: Props) => {
     >
       <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, mb: 1 }}>
         <Box sx={{ minWidth: 0, flex: 1 }}>
+          {job.jobType ? (
+            <Chip
+              label={TYPE_LABEL[job.jobType]}
+              size="small"
+              color={job.jobType === "employment" ? "secondary" : "default"}
+              variant="outlined"
+              sx={{
+                fontSize: "0.625rem",
+                height: 18,
+                mb: 0.5,
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+              }}
+            />
+          ) : null}
           <Typography
             variant="body1"
             sx={{

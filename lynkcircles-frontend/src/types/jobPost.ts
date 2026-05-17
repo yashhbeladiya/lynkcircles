@@ -2,6 +2,22 @@ import type { UserSummary } from "./user";
 
 export type JobStatus = "Open" | "In Progress" | "Completed" | "Canceled";
 
+/**
+ * Three genuinely different job shapes:
+ *   gig         — one-time work, fixed or hourly budget
+ *   recurring   — repeating service (weekly cleaning, daily cook)
+ *   employment  — full/part-time role with monthly salary + experience
+ *
+ * The discriminator drives form fields, tile chip, and label copy
+ * (the same `requiredOn` date is labeled "Needed by" on a gig,
+ * "Start date" on a recurring or employment row).
+ */
+export type JobType = "gig" | "recurring" | "employment";
+
+export type JobFrequency = "daily" | "weekly" | "bi-weekly" | "monthly";
+
+export type JobSchedule = "full-time" | "part-time";
+
 /** Per-job match info attached server-side for Worker viewers. */
 export interface JobMatch {
   score: number;
@@ -15,6 +31,12 @@ export interface JobPost {
   author: UserSummary;
   jobTitle: string;
   description: string;
+  jobType?: JobType;
+  /** recurring-only */
+  frequency?: JobFrequency;
+  /** employment-only */
+  experienceMinYears?: number;
+  schedule?: JobSchedule;
   /** Canonical service slugs from the catalog this job needs. Drives
    *  skill-matching, search, and the service-chip row on the card. */
   serviceKeys?: string[];
@@ -39,6 +61,13 @@ export interface JobPost {
 export interface CreateJobPostInput {
   title: string;
   description: string;
+  jobType: JobType;
+  /** Required only for recurring. */
+  frequency?: JobFrequency;
+  /** Required only for employment. */
+  experienceMinYears?: number;
+  /** Required only for employment. */
+  schedule?: JobSchedule;
   /** Required services from the catalog. At least one. */
   serviceKeys: string[];
   /** Optional free-text must-haves. */

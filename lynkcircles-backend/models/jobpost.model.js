@@ -17,9 +17,42 @@ const jobPostSchema = new mongoose.Schema({
    * beneath the service chips.
    */
   skillsRequired: { type: [String], default: [] },
+  /**
+   * Three genuinely different things crammed into one model before:
+   *
+   *   gig         — one-time job ("Fix my cabinet by Sunday for ₹500")
+   *   recurring   — ongoing service ("Twice-weekly cleaning, ₹3000/mo")
+   *   employment  — full/part-time role ("Embroidery operator, ₹20k +
+   *                 bonus, 2 yrs exp")
+   *
+   * Each surfaces a different subset of the optional fields below. The
+   * FE swaps form fields and tile labels off this discriminator. Old
+   * records without jobType default to "gig" — that's what they
+   * effectively were.
+   */
+  jobType: {
+    type: String,
+    enum: ["gig", "recurring", "employment"],
+    default: "gig",
+    index: true,
+  },
+  /** recurring jobs only — how often the work repeats. */
+  frequency: {
+    type: String,
+    enum: ["daily", "weekly", "bi-weekly", "monthly"],
+  },
+  /** employment only — minimum years of experience. */
+  experienceMinYears: { type: Number, min: 0 },
+  /** employment only — schedule shape. */
+  schedule: {
+    type: String,
+    enum: ["full-time", "part-time"],
+  },
   location: { type: String, required: true },
   budget: { type: String, required: true },
+  /** When work should start (gig: when needed; recurring/employment: start date). */
   requiredOn: { type: Date },
+  /** Applications close (all types). */
   deadline: { type: Date },
   status: {
     type: String,
