@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "LynkCircles"
+  },
+  "nav": {
+    "home": "Home",
+    "network": "Your network",
+    "works": "Works",
+    "messages": "Messages",
+    "notifications": "Notifications"
+  },
+  "home": {
+    "greeting": {
+      "lateNight": "Up late",
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "subtitle": {
+      "client": "Pick a Worker, post a job, or follow up on applicants — your hire-ready dashboard is below.",
+      "worker": "New jobs in your trade, your active applications, and your network — everything in one scroll."
+    },
+    "cta": {
+      "postJob": "Post a job",
+      "browseJobs": "Browse jobs"
+    }
+  },
+  "profile": {
+    "actions": {
+      "message": "Message",
+      "save": "Save",
+      "saved": "Saved",
+      "editProfile": "Edit profile",
+      "whatsapp": "WhatsApp"
+    }
+  },
+  "language": {
+    "label": "Language",
+    "english": "English",
+    "hindi": "हिन्दी",
+    "marathi": "मराठी"
+  }
+}

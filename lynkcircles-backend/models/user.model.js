@@ -52,6 +52,17 @@ const userSchema = new mongoose.Schema(
       facebook: { type: String },
       website: { type: String },
     },
+    /**
+     * Optional contact phone. Stored as a digit-only string (no
+     * spaces, dashes, parentheses) so it concatenates cleanly into
+     * `wa.me/<phone>` and `tel:` URIs without parsing. India is the
+     * primary market — if a number is 10 digits we assume +91 in
+     * link generation, but the schema doesn't enforce a country.
+     */
+    phone: { type: String },
+    /** Whether to surface the phone publicly on the profile and as a
+     *  WhatsApp link. False keeps it private (admin/account only). */
+    phonePublic: { type: Boolean, default: false },
     lastLogin: { type: Date },
     lastActivity: { type: Date },
     /**

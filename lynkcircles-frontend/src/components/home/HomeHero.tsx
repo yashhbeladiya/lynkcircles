@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { Briefcase, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { useAuthUser } from "@/hooks/useAuthUser";
 
@@ -10,12 +11,12 @@ interface Props {
   onPostJob: () => void;
 }
 
-const greetingForHour = (hour: number): string => {
-  if (hour < 5) return "Up late";
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  if (hour < 21) return "Good evening";
-  return "Up late";
+const greetingKeyForHour = (hour: number): string => {
+  if (hour < 5) return "home.greeting.lateNight";
+  if (hour < 12) return "home.greeting.morning";
+  if (hour < 17) return "home.greeting.afternoon";
+  if (hour < 21) return "home.greeting.evening";
+  return "home.greeting.lateNight";
 };
 
 /**
@@ -23,12 +24,18 @@ const greetingForHour = (hour: number): string => {
  * point: a Client lands here and sees "Post a job", a Worker lands
  * and sees "Browse open jobs". One screen, two products, picked by
  * who's looking.
+ *
+ * This is the first component fully wired through i18n — every
+ * user-facing string is a t(...) lookup. The rest of the app will
+ * migrate incrementally; English fallbacks via fallbackLng mean
+ * un-migrated strings keep working without churn.
  */
 export const HomeHero = ({ onPostJob }: Props) => {
+  const { t } = useTranslation();
   const { data: user } = useAuthUser();
   if (!user) return null;
 
-  const greeting = greetingForHour(new Date().getHours());
+  const greeting = t(greetingKeyForHour(new Date().getHours()));
   const isClient = user.role === "Client";
 
   return (
@@ -66,9 +73,7 @@ export const HomeHero = ({ onPostJob }: Props) => {
           color="text.secondary"
           sx={{ mt: 0.5, maxWidth: 520 }}
         >
-          {isClient
-            ? "Pick a Worker, post a job, or follow up on applicants — your hire-ready dashboard is below."
-            : "New jobs in your trade, your active applications, and your network — everything in one scroll."}
+          {isClient ? t("home.subtitle.client") : t("home.subtitle.worker")}
         </Typography>
       </Box>
       <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
@@ -79,7 +84,7 @@ export const HomeHero = ({ onPostJob }: Props) => {
             startIcon={<Briefcase size={16} />}
             onClick={onPostJob}
           >
-            Post a job
+            {t("home.cta.postJob")}
           </Button>
         ) : (
           <Button
@@ -89,7 +94,7 @@ export const HomeHero = ({ onPostJob }: Props) => {
             size="medium"
             startIcon={<Search size={16} />}
           >
-            Browse jobs
+            {t("home.cta.browseJobs")}
           </Button>
         )}
       </Box>

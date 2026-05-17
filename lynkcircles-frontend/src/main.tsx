@@ -7,6 +7,11 @@ import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
 
 import "./index.css";
+// Side-effect import — initializes i18next before any component
+// renders so the first paint uses the chosen locale (detected from
+// localStorage or browser language). Components read via the
+// useTranslation hook.
+import "./lib/i18n";
 import App from "./App";
 import { ThemeProvider } from "./theme/ThemeProvider";
 import { createQueryClient } from "./lib/queryClient";

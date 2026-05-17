@@ -39,6 +39,12 @@ export interface AuthUser {
     type?: "Point";
     coordinates?: [number, number];
   };
+  /** Digit-only phone (no formatting). India numbers come in as 10
+   *  digits — link helpers prepend +91 when none is set. */
+  phone?: string;
+  /** Whether to expose the phone publicly on the profile (and surface
+   *  the WhatsApp button). Default false. */
+  phonePublic?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

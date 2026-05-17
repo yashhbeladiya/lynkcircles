@@ -10,6 +10,8 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import { Camera, MapPin, X } from "lucide-react";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
 import toast from "react-hot-toast";
 
 import { UserAvatar } from "@/components/ui";
@@ -63,6 +65,8 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
   const [bio, setBio] = useState(user.bio ?? "");
   const [city, setCity] = useState(user.location?.city ?? "");
   const [state, setState] = useState(user.location?.state ?? "");
+  const [phone, setPhone] = useState(user.phone ?? "");
+  const [phonePublic, setPhonePublic] = useState(user.phonePublic ?? false);
   const [coords, setCoords] = useState<Coords>(initialCoords(user));
   const [locating, setLocating] = useState(false);
   const [profileDataUri, setProfileDataUri] = useState<string | null>(null);
@@ -82,6 +86,8 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
     setBio(user.bio ?? "");
     setCity(user.location?.city ?? "");
     setState(user.location?.state ?? "");
+    setPhone(user.phone ?? "");
+    setPhonePublic(user.phonePublic ?? false);
     setCoords(initialCoords(user));
     setProfileDataUri(null);
     setBannerDataUri(null);
@@ -132,6 +138,12 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
       (coords?.lat !== initial?.lat) || (coords?.lng !== initial?.lng);
     if (coordsChanged && coords) {
       payload.coordinates = coords;
+    }
+
+    const cleanedPhone = phone.replace(/\D/g, "");
+    if (cleanedPhone !== (user.phone ?? "")) payload.phone = cleanedPhone;
+    if (phonePublic !== (user.phonePublic ?? false)) {
+      payload.phonePublic = phonePublic;
     }
 
     if (Object.keys(payload).length === 0) {
@@ -297,6 +309,54 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
             sx={{ gridColumn: { sm: "1 / -1" } }}
             fullWidth
           />
+
+          {/* Phone + WhatsApp public toggle. Stored as digits only;
+              the `phonePublic` flag controls whether clients see a
+              WhatsApp button on this profile. Many Indian-market
+              users prefer WhatsApp to the in-app inbox. */}
+          <Box
+            sx={{
+              gridColumn: { sm: "1 / -1" },
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr auto" },
+              gap: 1,
+              alignItems: "center",
+              p: 1.5,
+              borderRadius: 1.5,
+              border: 1,
+              borderColor: "divider",
+            }}
+          >
+            <TextField
+              label="Phone (optional)"
+              placeholder="9876543210"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              helperText="10-digit Indian numbers get +91 automatically. Full international numbers work too."
+              fullWidth
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={phonePublic}
+                  onChange={(e) => setPhonePublic(e.target.checked)}
+                  disabled={!phone.replace(/\D/g, "")}
+                />
+              }
+              label={
+                <Box>
+                  <Typography variant="body2" sx={{ fontSize: "0.8125rem", fontWeight: 500 }}>
+                    Show WhatsApp button
+                  </Typography>
+                  <Typography variant="caption" color="text.tertiary" sx={{ fontSize: "0.6875rem" }}>
+                    Public on your profile
+                  </Typography>
+                </Box>
+              }
+              sx={{ ml: 0, alignItems: "center" }}
+            />
+          </Box>
 
           {/* Geolocation. Captured once and stored on the profile so
               every "near me" feature on the platform can use it. We

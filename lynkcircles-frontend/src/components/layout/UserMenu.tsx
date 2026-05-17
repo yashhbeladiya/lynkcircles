@@ -13,6 +13,7 @@ import { User as UserIcon, Settings, LogOut } from "lucide-react";
 
 import { UserAvatar } from "@/components/ui";
 import { useAuthUser, useLogout } from "@/hooks/useAuthUser";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 /**
  * Avatar in the top-right with a dropdown: profile / settings / sign
@@ -87,6 +88,9 @@ export const UserMenu = () => {
           </ListItemIcon>
           <ListItemText primary="Settings" />
         </MenuItem>
+        <Box sx={{ px: 2, py: 1 }}>
+          <LanguageSwitcher />
+        </Box>
         <Divider />
         <MenuItem onClick={handleLogout} disabled={logout.isPending}>
           <ListItemIcon>

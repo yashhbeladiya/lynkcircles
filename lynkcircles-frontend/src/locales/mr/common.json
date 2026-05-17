@@ -1,0 +1,43 @@
+{
+  "app": {
+    "name": "LynkCircles"
+  },
+  "nav": {
+    "home": "होम",
+    "network": "तुमचं नेटवर्क",
+    "works": "कामं",
+    "messages": "संदेश",
+    "notifications": "सूचना"
+  },
+  "home": {
+    "greeting": {
+      "lateNight": "रात्र झाली",
+      "morning": "सुप्रभात",
+      "afternoon": "नमस्कार",
+      "evening": "शुभ संध्या"
+    },
+    "subtitle": {
+      "client": "एक कारागीर निवडा, काम पोस्ट करा किंवा अर्जदारांशी बोला — तुमचा डॅशबोर्ड खाली आहे.",
+      "worker": "तुमच्या क्षेत्रातील नवीन कामं, तुमचे अर्ज आणि तुमचं नेटवर्क — सर्व एका स्क्रोलमध्ये."
+    },
+    "cta": {
+      "postJob": "काम पोस्ट करा",
+      "browseJobs": "कामं शोधा"
+    }
+  },
+  "profile": {
+    "actions": {
+      "message": "संदेश",
+      "save": "जतन करा",
+      "saved": "जतन केले",
+      "editProfile": "प्रोफाइल बदला",
+      "whatsapp": "व्हॉट्सअॅप"
+    }
+  },
+  "language": {
+    "label": "भाषा",
+    "english": "English",
+    "hindi": "हिन्दी",
+    "marathi": "मराठी"
+  }
+}

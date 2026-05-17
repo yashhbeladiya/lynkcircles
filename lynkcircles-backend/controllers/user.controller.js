@@ -169,9 +169,13 @@ export const updateProfile = async (req, res) => {
       "bannerImage",
       "socialLinks",
       "status",
-      // New: client-supplied { lat, lng } object. Mapped into the
-      // GeoJSON locationPoint field below so geo queries work.
+      // Client-supplied { lat, lng } object. Mapped into the GeoJSON
+      // locationPoint field below so geo queries work.
       "coordinates",
+      // Phone (digit-only) + the publicly-visible flag. Used to
+      // render the WhatsApp button on a profile.
+      "phone",
+      "phonePublic",
     ];
 
     const updatedFields = {};
@@ -248,6 +252,17 @@ export const updateProfile = async (req, res) => {
 
       if (key === "socialLinks") {
         updatedFields.socialLinks = body.socialLinks;
+      }
+
+      // Strip everything except digits — keeps storage canonical so
+      // a wa.me/<phone> link doesn't break on parentheses or dashes
+      // the user pasted in.
+      if (key === "phone") {
+        const cleaned = (body.phone ?? "").toString().replace(/\D/g, "");
+        updatedFields.phone = cleaned;
+      }
+      if (key === "phonePublic") {
+        updatedFields.phonePublic = !!body.phonePublic;
       }
 
       // Location coordinates: take { lat, lng } from the client,

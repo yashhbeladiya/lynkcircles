@@ -1,13 +1,16 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import {
   Bookmark,
   BookmarkCheck,
   Briefcase,
   MapPin,
+  MessageCircle,
   MessageSquare,
   Pencil,
   ShieldCheck,
@@ -18,6 +21,7 @@ import {
   useIsSaved,
   useToggleSaveWorker,
 } from "@/hooks/useSavedWorkers";
+import { buildWhatsappLink } from "@/lib/contactLinks";
 import type { UserProfile } from "@/types/user";
 
 interface Props {
@@ -47,6 +51,7 @@ const formatLocation = (loc?: UserProfile["location"]) => {
  * Airbnb/Upwork/Thumbtack work — and the way a marketplace should.
  */
 export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
+  const { t } = useTranslation();
   const isSaved = useIsSaved(user._id);
   const toggleSave = useToggleSaveWorker();
 
@@ -55,6 +60,16 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
   // really "save" another Client for a future job. Hide it on Client
   // profiles to keep the action surface focused.
   const showSave = user.role === "Worker";
+  // WhatsApp shortcut: only when phonePublic + phone is set. India
+  // primary market expects this — many users prefer WhatsApp to the
+  // in-app inbox.
+  const waLink =
+    user.phonePublic && user.phone
+      ? buildWhatsappLink(
+          user.phone,
+          `Hi ${user.firstName}, I found you on LynkCircles.`
+        )
+      : null;
 
   return (
     <Box
@@ -110,7 +125,7 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                 startIcon={<Pencil size={14} />}
                 onClick={onEdit}
               >
-                Edit profile
+                {t("profile.actions.editProfile")}
               </Button>
             ) : (
               <>
@@ -121,8 +136,34 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                   size="small"
                   startIcon={<MessageSquare size={14} />}
                 >
-                  Message
+                  {t("profile.actions.message")}
                 </Button>
+                {waLink ? (
+                  <Tooltip title={t("profile.actions.whatsapp")}>
+                    <Button
+                      component="a"
+                      href={waLink}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      variant="outlined"
+                      size="small"
+                      startIcon={<MessageCircle size={14} />}
+                      sx={{
+                        // WhatsApp brand green — staying off the
+                        // theme palette here is intentional, this is
+                        // an external-platform CTA.
+                        borderColor: "#25D366",
+                        color: "#25D366",
+                        "&:hover": {
+                          borderColor: "#1ebd5a",
+                          backgroundColor: "rgba(37, 211, 102, 0.08)",
+                        },
+                      }}
+                    >
+                      {t("profile.actions.whatsapp")}
+                    </Button>
+                  </Tooltip>
+                ) : null}
                 {showSave ? (
                   <Button
                     variant={isSaved ? "contained" : "outlined"}
@@ -138,7 +179,9 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                     onClick={() => toggleSave.mutate(user._id)}
                     disabled={toggleSave.isPending}
                   >
-                    {isSaved ? "Saved" : "Save"}
+                    {isSaved
+                      ? t("profile.actions.saved")
+                      : t("profile.actions.save")}
                   </Button>
                 ) : null}
               </>
