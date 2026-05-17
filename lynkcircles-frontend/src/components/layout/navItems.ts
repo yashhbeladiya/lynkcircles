@@ -2,7 +2,6 @@ import {
   Home,
   Users,
   Briefcase,
-  Newspaper,
   MessageSquare,
   Bell,
   type LucideIcon,
@@ -18,11 +17,14 @@ export interface NavItem {
   mobile: boolean;
 }
 
+// News is intentionally NOT exported here — it was a LinkedIn-shape
+// holdover that doesn't fit a trades marketplace. The page + backend
+// route still exist (dormant) in case we revisit with marketplace-
+// relevant content (rate trends, hiring tips), but it's off the nav.
 export const NAV_ITEMS: NavItem[] = [
   { label: "Home", href: "/", icon: Home, desktop: true, mobile: true },
   { label: "Network", href: "/network", icon: Users, desktop: true, mobile: true },
   { label: "Works", href: "/works", icon: Briefcase, desktop: true, mobile: true },
-  { label: "News", href: "/news", icon: Newspaper, desktop: true, mobile: false },
   {
     label: "Messages",
     href: "/messages",
