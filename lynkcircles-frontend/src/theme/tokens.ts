@@ -75,8 +75,11 @@ export const semantic = {
     textSecondary: zinc[600],
     textTertiary: zinc[500],
     textOnAccent: "#ffffff",
-    accentSolid: indigo[700],
-    accentHover: indigo[800],
+    // Bumped one step lighter (700 → 600) — the brand logo's mid-tone
+    // is right around indigo-500/600, and 600 reads more punchy as a
+    // primary CTA without losing the deep-trust feel of 700.
+    accentSolid: indigo[600],
+    accentHover: indigo[700],
     accentBg: indigo[50],
     accentBgHover: indigo[100],
     accentBorder: indigo[200],
@@ -109,6 +112,20 @@ export const semantic = {
     warning: amber[400],
     warningBg: "rgba(245, 158, 11, 0.15)",
   },
+} as const;
+
+/**
+ * Brand gradient. Mirrors the logo's deep-to-light indigo flow —
+ * use it for high-impact surfaces (Home hero, signed-in landing,
+ * empty states on key pages). Two stops per mode so cards on
+ * either background carry the same gradient direction.
+ *
+ * Don't sprinkle this everywhere — its job is to *anchor* the
+ * brand. Buttons, cards, and most surfaces should stay flat.
+ */
+export const brandGradient = {
+  light: `linear-gradient(135deg, ${indigo[700]} 0%, ${indigo[500]} 50%, ${indigo[400]} 100%)`,
+  dark: `linear-gradient(135deg, ${indigo[800]} 0%, ${indigo[600]} 50%, ${indigo[400]} 100%)`,
 } as const;
 
 export const radius = {

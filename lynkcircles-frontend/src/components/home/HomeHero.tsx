@@ -40,7 +40,9 @@ export const HomeHero = ({ onPostJob }: Props) => {
 
   return (
     <Box
-      sx={(theme) => ({
+      sx={() => ({
+        position: "relative",
+        overflow: "hidden",
         display: "flex",
         justifyContent: "space-between",
         alignItems: { xs: "flex-start", sm: "center" },
@@ -49,40 +51,72 @@ export const HomeHero = ({ onPostJob }: Props) => {
         p: { xs: 2.5, sm: 3 },
         borderRadius: 2,
         border: 1,
-        borderColor: "divider",
-        background:
+        borderColor: "transparent",
+        // Brand gradient — sourced from the logo. This is the only
+        // place the gradient leads the surface; everywhere else stays
+        // flat so the gradient anchors the brand without dilution.
+        background: (theme) =>
           theme.palette.mode === "dark"
-            ? `linear-gradient(135deg, ${theme.palette.background.paper} 0%, rgba(99, 102, 241, 0.08) 100%)`
-            : `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${theme.palette.primary.main}0a 100%)`,
+            ? `linear-gradient(135deg, #312e81 0%, #4f46e5 60%, #6366f1 100%)`
+            : `linear-gradient(135deg, #4338ca 0%, #6366f1 55%, #818cf8 100%)`,
+        color: "#ffffff",
+        boxShadow: (theme) =>
+          theme.palette.mode === "dark"
+            ? "0 10px 25px -10px rgba(67, 56, 202, 0.5)"
+            : "0 10px 25px -10px rgba(67, 56, 202, 0.4)",
         mb: 3,
       })}
     >
-      <Box sx={{ minWidth: 0 }}>
+      {/* Soft radial highlight in the top-right — adds depth so the
+          flat gradient doesn't read as a single block of color. */}
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background:
+            "radial-gradient(ellipse at top right, rgba(255,255,255,0.18), transparent 60%)",
+        }}
+      />
+      <Box sx={{ minWidth: 0, position: "relative" }}>
         <Typography
           variant="h4"
           sx={{
             fontWeight: 600,
             letterSpacing: "-0.02em",
             fontSize: { xs: "1.5rem", sm: "1.75rem" },
+            color: "#ffffff",
           }}
         >
           {greeting}, {user.firstName}
         </Typography>
         <Typography
           variant="body2"
-          color="text.secondary"
-          sx={{ mt: 0.5, maxWidth: 520 }}
+          sx={{
+            mt: 0.5,
+            maxWidth: 520,
+            color: "rgba(255, 255, 255, 0.85)",
+          }}
         >
           {isClient ? t("home.subtitle.client") : t("home.subtitle.worker")}
         </Typography>
       </Box>
-      <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
+      <Box sx={{ display: "flex", gap: 1, flexShrink: 0, position: "relative" }}>
+        {/* On the gradient hero, swap the primary button to a high-
+            contrast white-on-brand pill so the CTA still reads as the
+            highest-priority action against an already-colorful surface. */}
         {isClient ? (
           <Button
             variant="contained"
             size="medium"
             startIcon={<Briefcase size={16} />}
             onClick={onPostJob}
+            sx={{
+              bgcolor: "#ffffff",
+              color: "primary.main",
+              fontWeight: 600,
+              "&:hover": { bgcolor: "#f4f4f5" },
+            }}
           >
             {t("home.cta.postJob")}
           </Button>
@@ -93,6 +127,12 @@ export const HomeHero = ({ onPostJob }: Props) => {
             variant="contained"
             size="medium"
             startIcon={<Search size={16} />}
+            sx={{
+              bgcolor: "#ffffff",
+              color: "primary.main",
+              fontWeight: 600,
+              "&:hover": { bgcolor: "#f4f4f5" },
+            }}
           >
             {t("home.cta.browseJobs")}
           </Button>
