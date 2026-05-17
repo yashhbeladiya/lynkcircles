@@ -21,6 +21,9 @@ export interface AuthUser {
   headline?: string;
   bio?: string;
   connections?: string[];
+  /** Worker ids the user has bookmarked. Replaces the old connection
+   *  graph as the primary "people-I-want-to-find-again" primitive. */
+  savedWorkers?: string[];
   verified?: boolean;
   location?: {
     city?: string;

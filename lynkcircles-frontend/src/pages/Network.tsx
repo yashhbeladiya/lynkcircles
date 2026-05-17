@@ -8,58 +8,47 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import {
-  Check,
+  Bookmark,
+  BookmarkCheck,
   Compass,
   MessageSquare,
-  UserMinus,
-  UserPlus,
   Users,
-  X,
 } from "lucide-react";
 
 import { EmptyState } from "@/components/ui";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import { useConnections } from "@/hooks/useConnections";
 import { useRecommendedUsers } from "@/hooks/useRecommendedUsers";
 import {
-  useAcceptConnectionRequest,
-  useConnectionRequests,
-  useDisconnect,
-  useRejectConnectionRequest,
-  useSendConnectionRequest,
-} from "@/hooks/useProfile";
+  useSavedWorkers,
+  useToggleSaveWorker,
+} from "@/hooks/useSavedWorkers";
 import { NetworkRow } from "@/components/network/NetworkRow";
 
-type TabKey = "requests" | "connections" | "discover";
+type TabKey = "saved" | "discover";
 
 /**
- * Marketplace-flavored Network. Not "people you may know" — this is
- * "who's in your hire-and-be-hired graph". Three tabs, each showing
- * users with their role, what they do, and where they are, so a
- * Client can act on this list without having to click into each
- * profile to find out who's a Worker.
+ * Network — marketplace shape. Two tabs:
+ *
+ *   Saved    — Workers the Client has bookmarked for later. The
+ *              hire-when-I-need-you list. Empty for new Clients;
+ *              builds up as they Save Workers from profiles.
+ *   Discover — Suggested Workers near you in trades that overlap
+ *              your services / location.
+ *
+ * The previous version had Requests + Connections (the LinkedIn-shape
+ * request/accept graph). That's been retired — for a service
+ * marketplace, "save for later" + "message anytime" is the right
+ * primitive set. Connect/Accept friction added zero value.
  */
 const Network = () => {
-  const [tab, setTab] = useState<TabKey>("requests");
+  const [tab, setTab] = useState<TabKey>("saved");
   const { data: authUser } = useAuthUser();
 
-  const { data: requests, isLoading: requestsLoading } = useConnectionRequests();
-  const { data: connections, isLoading: connectionsLoading } = useConnections();
+  const { data: saved, isLoading: savedLoading } = useSavedWorkers();
   const { data: discover, isLoading: discoverLoading } = useRecommendedUsers();
-
-  const sendRequest = useSendConnectionRequest();
-  const accept = useAcceptConnectionRequest();
-  const reject = useRejectConnectionRequest();
-  const disconnect = useDisconnect();
+  const toggleSave = useToggleSaveWorker();
 
   const isClient = authUser?.role === "Client";
-  // Tab subtitles speak the actual marketplace use cases, not generic
-  // "your network" language. A Client cares about hiring, a Worker
-  // cares about being discovered + collaborating.
-  const discoverTitle = isClient ? "Workers to hire" : "People to connect with";
-  const discoverDescription = isClient
-    ? "Trusted Workers near you and in trades you might need. Connecting starts a conversation — you can hire them from their profile."
-    : "Other Workers in your trade, and Clients who post jobs near you. Connecting helps you get hired and stay in the loop.";
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 2, md: 3 }, px: { xs: 1.5, md: 3 } }}>
@@ -69,8 +58,8 @@ const Network = () => {
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
           {isClient
-            ? "The Workers you trust, the people who've reached out, and new pros you can hire."
-            : "Your connections, pending invites, and new people worth meeting in your trade."}
+            ? "Workers you've bookmarked + new pros to consider."
+            : "Other Workers in your trade and Clients near you. Use the search bar to find people directly."}
         </Typography>
       </Box>
 
@@ -84,16 +73,16 @@ const Network = () => {
           scrollButtons="auto"
         >
           <Tab
-            value="requests"
+            value="saved"
             label={
               <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
-                <span>Requests</span>
-                {requests && requests.length > 0 ? (
+                <span>Saved</span>
+                {saved && saved.length > 0 ? (
                   <Box
                     component="span"
                     sx={{
-                      bgcolor: "primary.main",
-                      color: "primary.contrastText",
+                      bgcolor: "action.selected",
+                      color: "text.secondary",
                       fontSize: "0.625rem",
                       fontWeight: 600,
                       px: 0.75,
@@ -102,84 +91,40 @@ const Network = () => {
                       textAlign: "center",
                     }}
                   >
-                    {requests.length}
+                    {saved.length}
                   </Box>
                 ) : null}
               </Box>
             }
           />
-          <Tab value="connections" label="Connections" />
           <Tab value="discover" label="Discover" />
         </Tabs>
       </Box>
 
-      {tab === "requests" ? (
-        requestsLoading ? (
+      {tab === "saved" ? (
+        savedLoading ? (
           <RowsSkeleton />
-        ) : !requests || requests.length === 0 ? (
+        ) : !saved || saved.length === 0 ? (
           <EmptyShell
-            icon={Users}
-            title="No pending requests"
-            description="When someone wants to connect with you, you'll see them here with an Accept / Decline action."
-          />
-        ) : (
-          <Box sx={{ display: "grid", gap: 1 }}>
-            {requests.map((req) => (
-              <NetworkRow
-                key={req._id}
-                user={req.sender}
-                actions={
-                  <>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      startIcon={<Check size={14} />}
-                      onClick={() => accept.mutate(req._id)}
-                      disabled={accept.isPending || reject.isPending}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<X size={14} />}
-                      onClick={() => reject.mutate(req._id)}
-                      disabled={accept.isPending || reject.isPending}
-                    >
-                      Decline
-                    </Button>
-                  </>
-                }
-              />
-            ))}
-          </Box>
-        )
-      ) : null}
-
-      {tab === "connections" ? (
-        connectionsLoading ? (
-          <RowsSkeleton />
-        ) : !connections || connections.length === 0 ? (
-          <EmptyShell
-            icon={Users}
-            title="No connections yet"
+            icon={Bookmark}
+            title="Nothing saved yet"
             description={
               isClient
-                ? "Connect with Workers you trust — it's the fastest way to rehire and to keep a shortlist for next time."
-                : "Connect with people in your trade and Clients near you. Connections show up first when they need work done."
+                ? "Tap Save on any Worker's profile and they'll land here — your hire-when-I-need-you shortlist."
+                : "Bookmarks show up here. Save someone on their profile to start a shortlist."
             }
           />
         ) : (
           <Box sx={{ display: "grid", gap: 1 }}>
-            {connections.map((c) => (
+            {saved.map((s) => (
               <NetworkRow
-                key={c._id}
-                user={c}
+                key={s._id}
+                user={s}
                 actions={
                   <>
                     <Button
                       component={Link}
-                      to={`/messages/${c._id}`}
+                      to={`/messages/${s._id}`}
                       size="small"
                       variant="contained"
                       startIcon={<MessageSquare size={14} />}
@@ -190,15 +135,11 @@ const Network = () => {
                       size="small"
                       variant="outlined"
                       color="inherit"
-                      startIcon={<UserMinus size={14} />}
-                      onClick={() => {
-                        if (window.confirm(`Remove ${c.firstName} from your connections?`)) {
-                          disconnect.mutate(c.username);
-                        }
-                      }}
-                      disabled={disconnect.isPending}
+                      startIcon={<BookmarkCheck size={14} />}
+                      onClick={() => toggleSave.mutate(s._id)}
+                      disabled={toggleSave.isPending}
                     >
-                      Remove
+                      Unsave
                     </Button>
                   </>
                 }
@@ -212,10 +153,12 @@ const Network = () => {
         <>
           <Box sx={{ mb: 2 }}>
             <Typography variant="overline" sx={{ color: "text.secondary", display: "block" }}>
-              {discoverTitle}
+              {isClient ? "Workers to hire" : "People to connect with"}
             </Typography>
             <Typography variant="caption" color="text.tertiary">
-              {discoverDescription}
+              {isClient
+                ? "Trusted Workers near you and in trades you might need. Tap a row to view their profile and portfolio."
+                : "Other Workers in your trade, and Clients who post jobs near you. Open a profile to message them."}
             </Typography>
           </Box>
           {discoverLoading ? (
@@ -224,7 +167,7 @@ const Network = () => {
             <EmptyShell
               icon={Compass}
               title="No suggestions yet"
-              description="As you connect with more people, we'll surface more here based on location and trade."
+              description="As more people join near you, this list fills up — sorted by location and overlapping trade."
             />
           ) : (
             <Box sx={{ display: "grid", gap: 1 }}>
@@ -234,13 +177,12 @@ const Network = () => {
                   user={u}
                   actions={
                     <Button
+                      component={Link}
+                      to={`/profile/${u.username}`}
                       size="small"
                       variant="contained"
-                      startIcon={<UserPlus size={14} />}
-                      onClick={() => sendRequest.mutate(u._id)}
-                      disabled={sendRequest.isPending}
                     >
-                      Connect
+                      View profile
                     </Button>
                   }
                 />

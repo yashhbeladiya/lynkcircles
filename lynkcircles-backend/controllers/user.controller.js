@@ -491,32 +491,65 @@ export const deleteAccount = async (req, res) => {
   }
 };
 
-// saveUser
+/**
+ * Toggle a Worker on / off the current user's `savedWorkers` list.
+ * Replaces the old "connect → accept → connected" flow as the
+ * primary bookmark primitive for Clients: tap to save for later,
+ * tap again to unsave. Idempotent end state (always reflects the
+ * post-action saved state).
+ *
+ * Returns `{ saved: boolean }` so the FE can flip the button label
+ * without re-fetching the whole user.
+ */
 export const saveUser = async (req, res) => {
   try {
     const { userId } = req.params;
+    if (userId === req.user._id.toString()) {
+      return res.status(400).json({ message: "Can't save yourself" });
+    }
     const userToSave = await User.findById(userId);
-    console.log("User to Save:", userToSave);
     if (!userToSave) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if user is already saved
-    if (req.user.savedWorkers.includes(userToSave._id)) {
-      return res.status(400).json({ message: "User already saved" });
+    const already = req.user.savedWorkers?.some(
+      (id) => id.toString() === userId
+    );
+    if (already) {
+      await User.findByIdAndUpdate(req.user._id, {
+        $pull: { savedWorkers: userToSave._id },
+      });
+      return res.json({ saved: false });
     }
 
-    // Update current user's saved users
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user._id,
-      { $push: { savedWorkers: userToSave._id } },
-      { new: true }
-    ).select("-password");
-
-    res.status(200).json(updatedUser);
-    console.log("User saved successfully");
+    await User.findByIdAndUpdate(req.user._id, {
+      $addToSet: { savedWorkers: userToSave._id },
+    });
+    res.json({ saved: true });
   } catch (error) {
     console.error("Error saving user:", error.message);
     res.status(500).json({ message: "Error saving user" });
+  }
+};
+
+/**
+ * Populated list of Workers the current user has saved. Used by the
+ * Network page's Saved tab. Skips the legacy `connections[]` field
+ * entirely — we're done with that primitive.
+ */
+export const getSavedWorkers = async (req, res) => {
+  try {
+    const me = await User.findById(req.user._id).select("savedWorkers");
+    const ids = me?.savedWorkers ?? [];
+    if (ids.length === 0) return res.json([]);
+
+    const workers = await User.find({ _id: { $in: ids } }).select(
+      "username firstName lastName location headline profilePicture role verified locationPoint locationCoordinates"
+    );
+
+    res.json(workers);
+  } catch (error) {
+    console.error("Error fetching saved workers:", error.message);
+    res.status(500).json({ message: "Error fetching saved workers" });
   }
 };

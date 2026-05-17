@@ -14,6 +14,7 @@ import {
   getUserFollowing,
   deleteAccount,
   saveUser,
+  getSavedWorkers,
 } from "../controllers/user.controller.js";
 import { runVerificationCheck } from "../lib/verification.js";
 
@@ -33,6 +34,7 @@ router.get("/followers", protectRoute, getUserFollowers);
 router.get("/following", protectRoute, getUserFollowing);
 router.delete("/delete-account", protectRoute, deleteAccount);
 router.post("/save/:userId", protectRoute, saveUser);
+router.get("/saved", protectRoute, getSavedWorkers);
 
 // Current verification progress for the requesting user. Inline
 // handler — small enough that pulling it into the controller would

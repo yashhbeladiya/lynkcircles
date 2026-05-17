@@ -2,29 +2,22 @@ import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
-import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import {
+  Bookmark,
+  BookmarkCheck,
   Briefcase,
-  Check,
-  Clock,
   MapPin,
   MessageSquare,
   Pencil,
   ShieldCheck,
-  UserMinus,
-  UserPlus,
-  X,
 } from "lucide-react";
 
 import { UserAvatar } from "@/components/ui";
 import {
-  useAcceptConnectionRequest,
-  useConnectionStatus,
-  useDisconnect,
-  useRejectConnectionRequest,
-  useSendConnectionRequest,
-} from "@/hooks/useProfile";
+  useIsSaved,
+  useToggleSaveWorker,
+} from "@/hooks/useSavedWorkers";
 import type { UserProfile } from "@/types/user";
 
 interface Props {
@@ -39,14 +32,29 @@ const formatLocation = (loc?: UserProfile["location"]) => {
   return parts.length ? parts.join(", ") : null;
 };
 
+/**
+ * Marketplace-shape profile header. The connection request/accept/
+ * connected graph is gone — for a service marketplace, "connect" was
+ * friction (I don't want a relationship, I want to hire someone or
+ * message them). The two primary actions now are:
+ *
+ *   Save   — bookmark a Worker for later (Client's perspective).
+ *            Toggles via /users/save/:id; optimistic.
+ *   Message — open the chat with this user.
+ *
+ * Both are available regardless of any prior relationship. If you've
+ * never met someone before, you can still message them. That's how
+ * Airbnb/Upwork/Thumbtack work — and the way a marketplace should.
+ */
 export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
-  const { data: connection } = useConnectionStatus(user._id, !isOwn);
-  const sendRequest = useSendConnectionRequest();
-  const accept = useAcceptConnectionRequest();
-  const reject = useRejectConnectionRequest();
-  const disconnect = useDisconnect();
+  const isSaved = useIsSaved(user._id);
+  const toggleSave = useToggleSaveWorker();
 
   const location = formatLocation(user.location);
+  // The Save button mostly makes sense for Workers — a Client doesn't
+  // really "save" another Client for a future job. Hide it on Client
+  // profiles to keep the action surface focused.
+  const showSave = user.role === "Worker";
 
   return (
     <Box
@@ -74,7 +82,6 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
 
       {/* Body */}
       <Box sx={{ px: { xs: 2, sm: 3 }, pb: 3 }}>
-        {/* Avatar + actions row */}
         <Box
           sx={{
             display: "flex",
@@ -106,29 +113,39 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                 Edit profile
               </Button>
             ) : (
-              <ActionButtons
-                userId={user._id}
-                username={user.username}
-                status={connection?.status ?? "not_connected"}
-                requestId={
-                  connection?.status === "received" ? connection.requestId : undefined
-                }
-                pending={
-                  sendRequest.isPending ||
-                  accept.isPending ||
-                  reject.isPending ||
-                  disconnect.isPending
-                }
-                onConnect={() => sendRequest.mutate(user._id)}
-                onAccept={(id) => accept.mutate(id)}
-                onReject={(id) => reject.mutate(id)}
-                onDisconnect={() => disconnect.mutate(user.username)}
-              />
+              <>
+                <Button
+                  component={Link}
+                  to={`/messages/${user._id}`}
+                  variant="contained"
+                  size="small"
+                  startIcon={<MessageSquare size={14} />}
+                >
+                  Message
+                </Button>
+                {showSave ? (
+                  <Button
+                    variant={isSaved ? "contained" : "outlined"}
+                    color={isSaved ? "success" : "primary"}
+                    size="small"
+                    startIcon={
+                      isSaved ? (
+                        <BookmarkCheck size={14} />
+                      ) : (
+                        <Bookmark size={14} />
+                      )
+                    }
+                    onClick={() => toggleSave.mutate(user._id)}
+                    disabled={toggleSave.isPending}
+                  >
+                    {isSaved ? "Saved" : "Save"}
+                  </Button>
+                ) : null}
+              </>
             )}
           </Box>
         </Box>
 
-        {/* Name + headline */}
         <Box sx={{ mt: 1.5 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
             <Typography
@@ -151,7 +168,9 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
             </Typography>
           ) : null}
 
-          {/* Meta chips */}
+          {/* Meta chips. Dropped the "N connections" chip — it was a
+              LinkedIn-shape stat. The role + location chips carry the
+              marketplace-relevant context. */}
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1.5 }}>
             {user.role ? (
               <Chip
@@ -169,112 +188,9 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                 sx={{ fontSize: "0.6875rem", height: 22 }}
               />
             ) : null}
-            <Chip
-              size="small"
-              label={`${user.connections?.length ?? 0} connections`}
-              sx={{ fontSize: "0.6875rem", height: 22 }}
-            />
           </Box>
         </Box>
       </Box>
     </Box>
-  );
-};
-
-interface ActionProps {
-  userId: string;
-  username: string;
-  status: "connected" | "pending" | "received" | "not_connected";
-  requestId?: string | undefined;
-  pending: boolean;
-  onConnect: () => void;
-  onAccept: (id: string) => void;
-  onReject: (id: string) => void;
-  onDisconnect: () => void;
-}
-
-const ActionButtons = ({
-  userId,
-  status,
-  requestId,
-  pending,
-  onConnect,
-  onAccept,
-  onReject,
-  onDisconnect,
-}: ActionProps) => {
-  if (status === "connected") {
-    return (
-      <>
-        <Button
-          component={Link}
-          to={`/messages/${userId}`}
-          variant="contained"
-          size="small"
-          startIcon={<MessageSquare size={14} />}
-        >
-          Message
-        </Button>
-        <IconButton
-          size="small"
-          onClick={onDisconnect}
-          disabled={pending}
-          aria-label="Remove connection"
-          sx={{ border: 1, borderColor: "divider" }}
-        >
-          <UserMinus size={14} />
-        </IconButton>
-      </>
-    );
-  }
-
-  if (status === "pending") {
-    return (
-      <Button
-        variant="outlined"
-        size="small"
-        disabled
-        startIcon={<Clock size={14} />}
-      >
-        Request sent
-      </Button>
-    );
-  }
-
-  if (status === "received" && requestId) {
-    return (
-      <>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Check size={14} />}
-          disabled={pending}
-          onClick={() => onAccept(requestId)}
-        >
-          Accept
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<X size={14} />}
-          disabled={pending}
-          onClick={() => onReject(requestId)}
-        >
-          Decline
-        </Button>
-      </>
-    );
-  }
-
-  return (
-    <Button
-      variant="contained"
-      size="small"
-      startIcon={<UserPlus size={14} />}
-      disabled={pending}
-      onClick={onConnect}
-    >
-      Connect
-    </Button>
   );
 };
