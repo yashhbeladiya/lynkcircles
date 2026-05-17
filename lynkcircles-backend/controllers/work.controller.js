@@ -1,8 +1,11 @@
 import JobPost from "../models/jobpost.model.js";
 import User from "../models/user.model.js";
 import WorkDetail from "../models/workdetail.model.js";
+import JobPortfolio from "../models/jobportfolio.model.js";
 import Notification from "../models/notification.model.js";
-import { isValidServiceKey } from "../lib/serviceCatalog.js";
+import { isValidServiceKey, lookupService } from "../lib/serviceCatalog.js";
+import { uploadToCloudinary } from "../util/util.js";
+import { runVerificationCheck } from "../lib/verification.js";
 
 const VALID_JOB_TYPES = ["gig", "recurring", "employment"];
 const VALID_FREQUENCIES = ["daily", "weekly", "bi-weekly", "monthly"];
@@ -135,10 +138,14 @@ export const getWorkPosts = async (req, res) => {
 export const getWorkPostById = async (req, res) => {
   try {
     const postId = req.params.id;
-    const post = await JobPost.findById(postId).populate(
-      "author",
-      "firstName lastName username profilePicture headline"
-    );
+    const post = await JobPost.findById(postId)
+      .populate("author", "firstName lastName username profilePicture headline verified")
+      // Populate the hired Worker so the detail page can render their
+      // card and link to their profile without a follow-up fetch.
+      .populate(
+        "hiredWorker",
+        "_id firstName lastName username profilePicture headline verified"
+      );
     res.status(200).json(post);
   } catch (error) {
     console.log("Error in getWorkPostById: ", error.message);
@@ -329,7 +336,7 @@ export const getWorkApplicants = async (req, res) => {
     const postId = req.params.id;
     const post = await JobPost.findById(postId).populate(
       "applicants",
-      "firstName lastName username profilePicture"
+      "firstName lastName username profilePicture verified"
     );
     if (!post) {
       return res.status(404).json({ message: "Work Post not found" });
@@ -337,6 +344,234 @@ export const getWorkApplicants = async (req, res) => {
     res.status(200).json(post.applicants);
   } catch (error) {
     console.log("Error in getWorkApplicants: ", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* ---------------- HIRING FLOW ---------------- */
+
+const requireJobOwnerOpen = async (req, jobId, allowedStatuses) => {
+  const post = await JobPost.findById(jobId);
+  if (!post) return { error: { status: 404, message: "Work Post not found" } };
+  if (post.author.toString() !== req.user._id.toString()) {
+    return { error: { status: 403, message: "Only the job poster can do this" } };
+  }
+  if (allowedStatuses && !allowedStatuses.includes(post.status)) {
+    return {
+      error: {
+        status: 400,
+        message: `Job is ${post.status}, expected one of: ${allowedStatuses.join(", ")}`,
+      },
+    };
+  }
+  return { post };
+};
+
+/**
+ * Client picks one applicant as the hired Worker. Moves status to
+ * In Progress and locks the post (no further applications affect the
+ * outcome). Notifies the hired Worker and all the not-hired
+ * applicants — "position filled" — so people aren't left hoping.
+ */
+export const hireApplicant = async (req, res) => {
+  try {
+    const { id: jobId, workerId } = req.params;
+    const { error, post } = await requireJobOwnerOpen(req, jobId, ["Open"]);
+    if (error) return res.status(error.status).json({ message: error.message });
+
+    if (!post.applicants.some((a) => a.toString() === workerId)) {
+      return res
+        .status(400)
+        .json({ message: "That user didn't apply to this job" });
+    }
+
+    post.hiredWorker = workerId;
+    post.status = "In Progress";
+    await post.save();
+
+    // Notify the hired Worker.
+    await Notification.create({
+      recipient: workerId,
+      relatedUser: req.user._id,
+      relatedJob: post._id,
+      type: "Job Application",
+      content: `You were hired for "${post.jobTitle}". The client can message you to get started.`,
+    });
+
+    // Notify everyone else who applied — done in parallel, errors
+    // swallowed so a single failed notification can't block the hire.
+    const others = post.applicants.filter(
+      (a) => a.toString() !== workerId
+    );
+    await Promise.all(
+      others.map((id) =>
+        Notification.create({
+          recipient: id,
+          relatedUser: req.user._id,
+          relatedJob: post._id,
+          type: "Job Application",
+          content: `The position for "${post.jobTitle}" has been filled.`,
+        }).catch((err) =>
+          console.warn("notify-applicant failed (non-fatal):", err.message)
+        )
+      )
+    );
+
+    res.json(post);
+  } catch (error) {
+    console.error("Error in hireApplicant:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * Client marks the job complete. Status: Completed. Worker is
+ * notified and prompted to expect a review. Verification check runs
+ * for the Worker since "completed jobs" is one of the criteria —
+ * crossing the threshold here flips the badge automatically.
+ */
+export const markJobComplete = async (req, res) => {
+  try {
+    const { id: jobId } = req.params;
+    const { error, post } = await requireJobOwnerOpen(req, jobId, [
+      "In Progress",
+    ]);
+    if (error) return res.status(error.status).json({ message: error.message });
+
+    if (!post.hiredWorker) {
+      return res
+        .status(400)
+        .json({ message: "Can't complete a job that has no hired Worker" });
+    }
+
+    post.status = "Completed";
+    await post.save();
+
+    await Notification.create({
+      recipient: post.hiredWorker,
+      relatedUser: req.user._id,
+      relatedJob: post._id,
+      type: "Job Application",
+      content: `"${post.jobTitle}" was marked complete. Your client may leave a review with photos shortly.`,
+    });
+
+    // Verification scoring for the Worker. Idempotent — does nothing
+    // if they're already verified or the gate isn't met yet.
+    void runVerificationCheck(post.hiredWorker);
+
+    res.json(post);
+  } catch (error) {
+    console.error("Error in markJobComplete:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+/**
+ * Client reviews the completed job. We create a JobPortfolio entry
+ * on the hired Worker's profile (so the work shows up in their
+ * portfolio) AND embed the review in it. This is the trust-loop
+ * close: a completed hire turns into a portfolio entry + a
+ * review-with-photos, exactly what makes a future Client willing to
+ * hire this Worker.
+ *
+ * If the Worker has a matching WorkDetail for the job's service,
+ * link to that; otherwise we create a minimal one so the
+ * required `service` ref on JobPortfolio is satisfied without
+ * blocking the review submission.
+ */
+export const reviewCompletedJob = async (req, res) => {
+  try {
+    const { id: jobId } = req.params;
+    const { error, post } = await requireJobOwnerOpen(req, jobId, [
+      "Completed",
+    ]);
+    if (error) return res.status(error.status).json({ message: error.message });
+
+    if (post.reviewed) {
+      return res
+        .status(409)
+        .json({ message: "You already reviewed this job" });
+    }
+    if (!post.hiredWorker) {
+      return res
+        .status(400)
+        .json({ message: "Can't review a job with no hired Worker" });
+    }
+
+    const { rating, review, images = [] } = req.body;
+    if (typeof rating !== "number" || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
+    }
+    if (!review?.trim()) {
+      return res.status(400).json({ message: "Write a short review" });
+    }
+
+    // Match a service. Prefer one the Worker already lists for the
+    // job's serviceKeys; fall back to creating a minimal WorkDetail
+    // so the required ref is satisfied (they applied to this job, so
+    // they're effectively claiming this service).
+    let workDetail = null;
+    if (post.serviceKeys?.length) {
+      workDetail = await WorkDetail.findOne({
+        user: post.hiredWorker,
+        serviceKey: { $in: post.serviceKeys },
+      });
+    }
+    if (!workDetail) {
+      const fallbackKey = post.serviceKeys?.[0];
+      const label = lookupService(fallbackKey)?.label ?? fallbackKey ?? "Service";
+      workDetail = await WorkDetail.create({
+        user: post.hiredWorker,
+        serviceKey: fallbackKey,
+        serviceOffered: label,
+      });
+    }
+
+    // Upload review photos (data URIs from FE) in parallel.
+    const uploadedImages = (
+      await Promise.all(
+        images
+          .filter((img) => typeof img === "string" && img.startsWith("data:"))
+          .map((img) => uploadToCloudinary(img, "reviews"))
+      )
+    ).filter(Boolean);
+
+    const portfolio = await JobPortfolio.create({
+      user: post.hiredWorker,
+      service: workDetail._id,
+      jobTitle: post.jobTitle,
+      description: post.description,
+      images: [],
+      videos: [],
+      dateCompleted: new Date(),
+      clientUsername: req.user.username,
+      clientName: `${req.user.firstName} ${req.user.lastName}`,
+      reviews: [
+        {
+          reviewer: req.user._id,
+          review: review.trim(),
+          rating,
+          images: uploadedImages,
+        },
+      ],
+    });
+
+    post.reviewed = true;
+    await post.save();
+
+    await Notification.create({
+      recipient: post.hiredWorker,
+      relatedUser: req.user._id,
+      relatedJob: post._id,
+      type: "Review",
+      content: `You received a new ${rating}-star review for "${post.jobTitle}".`,
+    });
+
+    void runVerificationCheck(post.hiredWorker);
+
+    res.status(201).json({ portfolio });
+  } catch (error) {
+    console.error("Error in reviewCompletedJob:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -15,6 +15,7 @@ import {
   deleteAccount,
   saveUser,
 } from "../controllers/user.controller.js";
+import { runVerificationCheck } from "../lib/verification.js";
 
 const router = express.Router();
 
@@ -32,6 +33,19 @@ router.get("/followers", protectRoute, getUserFollowers);
 router.get("/following", protectRoute, getUserFollowing);
 router.delete("/delete-account", protectRoute, deleteAccount);
 router.post("/save/:userId", protectRoute, saveUser);
+
+// Current verification progress for the requesting user. Inline
+// handler — small enough that pulling it into the controller would
+// just be ceremony, and the lib function does the actual work.
+router.get("/me/verification", protectRoute, async (req, res) => {
+  try {
+    const status = await runVerificationCheck(req.user._id);
+    res.json(status);
+  } catch (error) {
+    console.error("Error in /me/verification:", error.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // Catch-all by ObjectId. Must come last.
 router.get("/:id", protectRoute, getUserById);

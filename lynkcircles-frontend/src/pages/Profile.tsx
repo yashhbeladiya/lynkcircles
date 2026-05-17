@@ -16,6 +16,7 @@ import { PortfolioSection } from "@/components/profile/PortfolioSection";
 import { ReviewsSection } from "@/components/profile/ReviewsSection";
 import { ActivitySection } from "@/components/profile/ActivitySection";
 import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
+import { VerificationCard } from "@/components/profile/VerificationCard";
 
 const Profile = () => {
   const { username } = useParams<{ username: string }>();
@@ -62,6 +63,9 @@ const Profile = () => {
   return (
     <Container maxWidth="md" sx={{ py: { xs: 2, md: 3 }, px: { xs: 1.5, md: 3 } }}>
       <ProfileHeader user={profile} isOwn={isOwn} onEdit={() => setEditOpen(true)} />
+      {/* Verification progress: own-profile + Worker + not-yet-verified.
+          The card hides itself if the user is already verified. */}
+      {isOwn && isWorker ? <VerificationCard /> : null}
       <AboutSection user={profile} />
       {isWorker ? (
         <>

@@ -9,6 +9,9 @@ import {
   getWorkApplicants,
   getWorkPostById,
   getWorkPosts,
+  hireApplicant,
+  markJobComplete,
+  reviewCompletedJob,
   updateWorkPost,
   withdrawApplication,
 } from "../controllers/work.controller.js";
@@ -29,6 +32,13 @@ router.get("/", protectRoute, getWorkPosts);
 router.get("/:id/applicants", protectRoute, getWorkApplicants);
 router.post("/:id/apply", protectRoute, applyForWork);
 router.delete("/:id/withdraw", protectRoute, withdrawApplication);
+
+// Hiring lifecycle: pick applicant → complete → review. Each step
+// also runs verification scoring for the hired Worker so the badge
+// flips automatically when criteria are met.
+router.post("/:id/hire/:workerId", protectRoute, hireApplicant);
+router.post("/:id/complete", protectRoute, markJobComplete);
+router.post("/:id/review", protectRoute, reviewCompletedJob);
 
 router.put("/update/:id", protectRoute, updateWorkPost);
 router.delete("/delete/:id", protectRoute, deleteWorkPost);

@@ -31,12 +31,18 @@ import { useAuthUser } from "@/hooks/useAuthUser";
 import {
   useApplyForJob,
   useDeleteJobPost,
+  useHireApplicant,
   useJobApplicants,
   useJobPost,
+  useMarkJobComplete,
   useUpdateJobPost,
   useWithdrawApplication,
 } from "@/hooks/useJobPosts";
+import { JobReviewDialog } from "@/components/works/JobReviewDialog";
 import type { JobStatus } from "@/types/jobPost";
+import type { UserSummary } from "@/types/user";
+
+import { Award, HandCoins, Sparkles } from "lucide-react";
 
 const statusTone = (status: JobStatus): "trust" | "info" | "warning" | "neutral" => {
   switch (status) {
@@ -51,6 +57,11 @@ const statusTone = (status: JobStatus): "trust" | "info" | "warning" | "neutral"
   }
 };
 
+const isUserSummary = (
+  v: string | UserSummary | null | undefined
+): v is UserSummary =>
+  !!v && typeof v === "object" && "_id" in v && "username" in v;
+
 const WorkPage = () => {
   const { workPostId } = useParams<{ workPostId: string }>();
   const navigate = useNavigate();
@@ -60,7 +71,10 @@ const WorkPage = () => {
   const withdraw = useWithdrawApplication();
   const updateJob = useUpdateJobPost();
   const deleteJob = useDeleteJobPost();
+  const hireApplicantMut = useHireApplicant();
+  const markComplete = useMarkJobComplete();
   const [statusAnchor, setStatusAnchor] = useState<HTMLElement | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const isOwner = !!job && authUser?._id === job.author._id;
   // Applicants endpoint requires owner permission server-side; only
@@ -81,6 +95,9 @@ const WorkPage = () => {
   });
 
   const closed = job.status !== "Open";
+  const hired = isUserSummary(job.hiredWorker) ? job.hiredWorker : null;
+  const viewerIsHired =
+    !!authUser && hired?._id === authUser._id;
 
   const handleStatusChange = (status: JobStatus) => {
     setStatusAnchor(null);
@@ -136,7 +153,40 @@ const WorkPage = () => {
           </Box>
 
           {isOwner ? (
-            <Box sx={{ display: "flex", gap: 0.5 }}>
+            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              {/* Lifecycle-aware primary CTA. The state machine is:
+                  Open → (Hire applicant) → In Progress → (Mark complete)
+                  → Completed → (Leave review) → reviewed=true */}
+              {job.status === "In Progress" ? (
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<CheckCircle size={14} />}
+                  onClick={() => markComplete.mutate(job._id)}
+                  disabled={markComplete.isPending}
+                >
+                  Mark complete
+                </Button>
+              ) : null}
+              {job.status === "Completed" && !job.reviewed ? (
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Award size={14} />}
+                  onClick={() => setReviewOpen(true)}
+                >
+                  Leave a review
+                </Button>
+              ) : null}
+              {job.status === "Completed" && job.reviewed ? (
+                <Chip
+                  icon={<Award size={12} />}
+                  label="Reviewed"
+                  size="small"
+                  color="success"
+                  variant="outlined"
+                />
+              ) : null}
               <Button
                 size="small"
                 variant="outlined"
@@ -166,15 +216,24 @@ const WorkPage = () => {
             </Box>
           ) : (
             <Box>
-              {hasApplied ? (
+              {viewerIsHired ? (
+                <Chip
+                  icon={<Sparkles size={12} />}
+                  label="You were hired!"
+                  size="small"
+                  color="primary"
+                  variant="filled"
+                  sx={{ fontWeight: 600 }}
+                />
+              ) : hasApplied ? (
                 <Button
                   variant="outlined"
                   size="small"
                   startIcon={<XCircle size={14} />}
                   onClick={() => withdraw.mutate(job._id)}
-                  disabled={withdraw.isPending}
+                  disabled={withdraw.isPending || closed}
                 >
-                  Withdraw application
+                  {closed ? "Position filled" : "Withdraw application"}
                 </Button>
               ) : (
                 <Button
@@ -326,6 +385,80 @@ const WorkPage = () => {
         ) : null}
       </Box>
 
+      {/* Hired Worker card — visible to everyone once a hire happens.
+          For the Client, it's the receipt of who they picked. For
+          other Workers viewing the job, it's the signal that the
+          position is filled. For the hired Worker, it's the
+          confirmation pinned at the top. */}
+      {hired ? (
+        <Box
+          sx={(theme) => ({
+            p: { xs: 2, md: 2.5 },
+            borderRadius: 2,
+            border: 1,
+            borderColor: "primary.main",
+            backgroundColor: theme.palette.mode === "dark"
+              ? "rgba(99, 102, 241, 0.08)"
+              : "rgba(99, 102, 241, 0.05)",
+            mb: 2,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+          })}
+        >
+          <HandCoins size={20} color="var(--mui-palette-primary-main)" aria-hidden />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              variant="overline"
+              sx={{ color: "primary.main", display: "block", fontSize: "0.625rem" }}
+            >
+              Hired worker
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}>
+              <Box
+                component={Link}
+                to={`/profile/${hired.username}`}
+                sx={{ display: "flex", textDecoration: "none" }}
+              >
+                <UserAvatar user={hired} size="sm" verified={hired.verified} />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  component={Link}
+                  to={`/profile/${hired.username}`}
+                  variant="body2"
+                  sx={{
+                    fontWeight: 600,
+                    color: "text.primary",
+                    textDecoration: "none",
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                >
+                  {hired.firstName} {hired.lastName}
+                </Typography>
+                {hired.headline ? (
+                  <Typography
+                    variant="caption"
+                    sx={{ display: "block", color: "text.tertiary", fontSize: "0.6875rem" }}
+                  >
+                    {hired.headline}
+                  </Typography>
+                ) : null}
+              </Box>
+            </Box>
+          </Box>
+          <Button
+            component={Link}
+            to={`/messages/${hired._id}`}
+            size="small"
+            variant="outlined"
+            startIcon={<MessageSquare size={13} />}
+          >
+            Message
+          </Button>
+        </Box>
+      ) : null}
+
       {/* Applicants — owner only */}
       {isOwner ? (
         <Box
@@ -409,21 +542,59 @@ const WorkPage = () => {
                       </Typography>
                     ) : null}
                   </Box>
-                  <Button
-                    component={Link}
-                    to={`/messages/${applicant._id}`}
-                    size="small"
-                    variant="outlined"
-                    startIcon={<MessageSquare size={13} />}
-                  >
-                    Message
-                  </Button>
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <Button
+                      component={Link}
+                      to={`/messages/${applicant._id}`}
+                      size="small"
+                      variant="outlined"
+                      startIcon={<MessageSquare size={13} />}
+                    >
+                      Message
+                    </Button>
+                    {/* Hire button only when the job is still Open. Once
+                        we move to In Progress, this disappears so a
+                        Client can't accidentally rehire a different
+                        applicant mid-job. */}
+                    {job.status === "Open" ? (
+                      <Button
+                        size="small"
+                        variant="contained"
+                        startIcon={<HandCoins size={13} />}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Hire ${applicant.firstName} for this job? Other applicants will be notified the position is filled.`
+                            )
+                          ) {
+                            hireApplicantMut.mutate({
+                              jobId: job._id,
+                              workerId: applicant._id,
+                            });
+                          }
+                        }}
+                        disabled={hireApplicantMut.isPending}
+                      >
+                        Hire
+                      </Button>
+                    ) : null}
+                  </Box>
                 </Box>
               ))}
             </Box>
           )}
         </Box>
       ) : null}
+
+      <JobReviewDialog
+        jobId={job._id}
+        jobTitle={job.jobTitle}
+        hiredWorkerName={
+          hired ? `${hired.firstName} ${hired.lastName}` : undefined
+        }
+        open={reviewOpen}
+        onClose={() => setReviewOpen(false)}
+      />
     </Container>
   );
 };

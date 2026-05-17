@@ -61,6 +61,20 @@ const jobPostSchema = new mongoose.Schema({
   },
   applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   /**
+   * The applicant the Client picked. Set when the Client clicks "Hire"
+   * on a specific applicant — moves the job to In Progress and locks
+   * everyone else out of being hired for this same post. Stays
+   * populated through Completed so the Worker's portfolio entry can
+   * back-reference it.
+   */
+  hiredWorker: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  /**
+   * Flips true after the Client submits a review (via /works/:id/review).
+   * Drives the "Leave a review" → "Reviewed" UI state on the detail
+   * page so a Client doesn't end up reviewing the same job twice.
+   */
+  reviewed: { type: Boolean, default: false },
+  /**
    * GeoJSON Point for geospatial queries. Stored as [longitude, latitude].
    * Falls back to the client's profile location when the FE doesn't
    * pass an explicit coordinate set on createJob.

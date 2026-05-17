@@ -145,3 +145,61 @@ export const useDeleteJobPost = () => {
     onError: (error) => toast.error(apiErrorMessage(error)),
   });
 };
+
+/* -------- Hiring flow -------- */
+
+export const useHireApplicant = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ jobId, workerId }: { jobId: string; workerId: string }) => {
+      const { data } = await api.post<JobPost>(
+        `/works/${jobId}/hire/${workerId}`
+      );
+      return data;
+    },
+    onSuccess: () => {
+      invalidateJobs(queryClient);
+      toast.success("Applicant hired — they've been notified.");
+    },
+    onError: (error) => toast.error(apiErrorMessage(error)),
+  });
+};
+
+export const useMarkJobComplete = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const { data } = await api.post<JobPost>(`/works/${jobId}/complete`);
+      return data;
+    },
+    onSuccess: () => {
+      invalidateJobs(queryClient);
+      toast.success("Marked complete. Leave a review when you're ready.");
+    },
+    onError: (error) => toast.error(apiErrorMessage(error)),
+  });
+};
+
+export interface SubmitJobReviewInput {
+  jobId: string;
+  rating: number;
+  review: string;
+  /** Optional base64 data URIs uploaded to Cloudinary server-side. */
+  images?: string[];
+}
+
+export const useSubmitJobReview = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ jobId, ...body }: SubmitJobReviewInput) => {
+      const { data } = await api.post(`/works/${jobId}/review`, body);
+      return data;
+    },
+    onSuccess: () => {
+      invalidateJobs(queryClient);
+      queryClient.invalidateQueries({ queryKey: ["portfolio"] });
+      toast.success("Review posted. Thanks for closing the loop.");
+    },
+    onError: (error) => toast.error(apiErrorMessage(error)),
+  });
+};

@@ -49,6 +49,10 @@ export interface JobPost {
   deadline?: string | null;
   /** Either populated UserSummary[] or raw id strings depending on endpoint. */
   applicants: Array<string | UserSummary>;
+  /** The applicant the Client picked. Populated on the detail endpoint. */
+  hiredWorker?: UserSummary | string | null;
+  /** True once the Client has submitted a post-completion review. */
+  reviewed?: boolean;
   /** Present only when the requesting user is a Worker — server attaches
    *  the match block so the UI can sort/tag without re-computing. */
   match?: JobMatch;
