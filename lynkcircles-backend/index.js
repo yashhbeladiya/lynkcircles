@@ -4,11 +4,18 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import cors from "cors";
 import path from "path";
+import helmet from "helmet";
+import compression from "compression";
 
 dotenv.config();
 
 import initializeSocket from "./lib/socket.js";
 import { connectDB } from "./lib/db.js";
+import {
+  authLimiter,
+  searchLimiter,
+  writeLimiter,
+} from "./lib/rateLimiters.js";
 
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -30,6 +37,33 @@ const PORT = process.env.PORT || 5100;
 const __dirname = path.resolve();
 const isProd = process.env.NODE_ENV === "production";
 
+// When deployed behind a reverse proxy (Render, Cloudflare, an ALB),
+// trust one hop so req.ip resolves to the real client IP and the
+// rate limiter actually keys on the right address. Disabled in dev
+// because tools like curl on localhost don't need it.
+if (isProd) app.set("trust proxy", 1);
+
+/**
+ * Hardening middleware. Order matters:
+ *   1. compression — applies to responses, must come before route
+ *      handlers so they go through it on the way out.
+ *   2. helmet — sets security headers (CSP, X-Frame-Options, HSTS,
+ *      X-Content-Type-Options, Referrer-Policy, etc.). Default config
+ *      is sensible for an SPA + JSON API; cross-origin policies left
+ *      permissive because we serve Cloudinary images and the FE may
+ *      live on a different origin.
+ *   3. cors — needs to run before any route returns a response so
+ *      preflight requests get the right Allow headers.
+ */
+app.use(compression());
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // SPA + Cloudinary — opt-in CSP later
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
@@ -46,17 +80,23 @@ app.get("/health", (req, res) =>
   res.json({ status: "ok", uptime: process.uptime(), env: process.env.NODE_ENV ?? "development" })
 );
 
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/feed", feedRoutes);
+// Route-scoped rate limiters. Mount BEFORE the route so the limiter
+// gates incoming requests. Auth gets the tightest bucket (brute-force
+// target); writes and search get their own pools. Read endpoints
+// stay unlimited at this layer — they're either cacheable or
+// individually cheap.
+app.use("/api/v1/auth", authLimiter, authRoutes);
+app.use("/api/v1/search", searchLimiter, searchRoutes);
+
+app.use("/api/v1/users", writeLimiter, userRoutes);
+app.use("/api/v1/feed", writeLimiter, feedRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
-app.use("/api/v1/connections", connectionRoutes);
-app.use("/api/v1/works", workRoutes);
-app.use("/api/v1/workdetails", workDetailRoutes);
-app.use("/api/v1/messages", messageRoutes);
+app.use("/api/v1/connections", writeLimiter, connectionRoutes);
+app.use("/api/v1/works", writeLimiter, workRoutes);
+app.use("/api/v1/workdetails", writeLimiter, workDetailRoutes);
+app.use("/api/v1/messages", writeLimiter, messageRoutes);
 app.use("/api/v1/news", newsRoutes);
 app.use("/api/v1/services", servicesRoutes);
-app.use("/api/v1/search", searchRoutes);
 
 if (isProd) {
   app.use(express.static(path.join(__dirname, "/lynkcircles-react-app/build")));
@@ -74,10 +114,14 @@ app.use("/api", (req, res) => {
 });
 
 // Centralized error handler. Any route that calls next(err) lands here,
-// as do synchronous throws from express. Without this, unhandled errors
-// either crash the process or leak stack traces to the client.
+// as do synchronous throws from express. Stack traces are kept out of
+// the production response body but always logged server-side with
+// request context so the on-call has something to triage from.
 app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
+  console.error(
+    `[error] ${req.method} ${req.originalUrl} — ${err.message}`,
+    isProd ? "" : `\n${err.stack}`
+  );
   if (res.headersSent) return next(err);
   res.status(err.status || 500).json({
     message: isProd ? "Internal server error" : err.message,

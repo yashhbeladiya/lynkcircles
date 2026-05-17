@@ -41,6 +41,12 @@ const notificationSchema = mongoose.Schema(
 );
 
 
+// Notifications list query is always per-recipient ordered newest-first
+// (controllers/notification.controller.js → getUserNotifications). The
+// unread-count derivation hits the same key plus `read: false`, so the
+// compound index covers both shapes without a separate single-field index.
+notificationSchema.index({ recipient: 1, read: 1, createdAt: -1 });
+
 const Notification = mongoose.model("Notification", notificationSchema);
 
 export default Notification;
