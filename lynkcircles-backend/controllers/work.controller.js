@@ -1,22 +1,37 @@
-import e from "express";
 import JobPost from "../models/jobpost.model.js";
 import User from "../models/user.model.js";
+import WorkDetail from "../models/workdetail.model.js";
 import Notification from "../models/notification.model.js";
+import { isValidServiceKey } from "../lib/serviceCatalog.js";
 
 export const createWork = async (req, res) => {
   try {
     const {
       title,
       description,
-      skills,
+      serviceKeys = [],
+      skills = [],
       location,
       pay,
       status,
       requiredOn,
       deadline,
-      applicants,
     } = req.body;
-    const newWork = new JobPost({
+
+    // Drop unknown service keys defensively — the FE picker enforces
+    // catalog membership, but a stale FE or curl call shouldn't be
+    // able to pollute the matching index.
+    const cleanedServiceKeys = Array.isArray(serviceKeys)
+      ? Array.from(new Set(serviceKeys.filter((k) => typeof k === "string" && isValidServiceKey(k))))
+      : [];
+
+    if (cleanedServiceKeys.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Pick at least one service from the catalog" });
+    }
+
+    const newWork = await JobPost.create({
       jobTitle: title,
       description,
       budget: pay,
@@ -24,12 +39,11 @@ export const createWork = async (req, res) => {
       status,
       requiredOn,
       deadline,
-      skillsRequired: skills,
-      applicants,
+      serviceKeys: cleanedServiceKeys,
+      skillsRequired: Array.isArray(skills) ? skills : [],
       author: req.user._id,
     });
-    await newWork.save();
-    res.status(201).json({ message: "Work Post created successfully" });
+    res.status(201).json(newWork);
 
     // Send notification to all followers
     const user = await User.find({ followingClients: req.user._id });
@@ -48,6 +62,12 @@ export const createWork = async (req, res) => {
   }
 };
 
+/**
+ * Browse-jobs feed. For Workers, augments each job with a `match`
+ * object computed from the Worker's offered services so the FE can
+ * show "matches your trade" and sort by relevance. Clients get a
+ * plain chronological list — they're not the side being matched.
+ */
 export const getWorkPosts = async (req, res) => {
   try {
     const workPosts = await JobPost.find({ status: "Open" })
@@ -55,8 +75,49 @@ export const getWorkPosts = async (req, res) => {
       .populate(
         "author",
         "firstName lastName username profilePicture verified headline"
+      )
+      .lean();
+
+    if (req.user?.role !== "Worker") {
+      return res.status(200).json(workPosts);
+    }
+
+    // Worker's offered service keys, drawn from their WorkDetail rows.
+    // distinct() returns an array of unique values; the .filter strips
+    // null/undefined left over from pre-taxonomy records.
+    const userServiceKeys = (
+      await WorkDetail.distinct("serviceKey", { user: req.user._id })
+    ).filter(Boolean);
+
+    const userServiceSet = new Set(userServiceKeys);
+
+    // Tag every job with a match block: which of the user's services
+    // it hits, how many, and a normalized 0..1 score. Then sort:
+    // matches first by score desc, ties broken by recency. No-skill
+    // jobs (legacy data, or jobs that didn't pick from the catalog)
+    // fall to the bottom so they don't crowd out matched results.
+    const enriched = workPosts.map((job) => {
+      const matched = (job.serviceKeys ?? []).filter((k) =>
+        userServiceSet.has(k)
       );
-    res.status(200).json(workPosts);
+      const total = (job.serviceKeys ?? []).length || 1;
+      return {
+        ...job,
+        match: {
+          score: matched.length / total,
+          matchedKeys: matched,
+          totalKeys: job.serviceKeys?.length ?? 0,
+          hasMatch: matched.length > 0,
+        },
+      };
+    });
+
+    enriched.sort((a, b) => {
+      if (a.match.score !== b.match.score) return b.match.score - a.match.score;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    res.status(200).json(enriched);
   } catch (error) {
     console.log("Error in getWorkPosts: ", error.message);
     res.status(500).json({ message: "Server error" });
@@ -124,7 +185,9 @@ export const updateWorkPost = async (req, res) => {
     const {
       title,
       description,
+      serviceKeys,
       skillsRequired,
+      skills,
       location,
       pay,
       status,
@@ -134,7 +197,21 @@ export const updateWorkPost = async (req, res) => {
 
     if (title !== undefined) post.jobTitle = title;
     if (description !== undefined) post.description = description;
+    if (serviceKeys !== undefined) {
+      const cleaned = Array.isArray(serviceKeys)
+        ? Array.from(
+            new Set(
+              serviceKeys.filter(
+                (k) => typeof k === "string" && isValidServiceKey(k)
+              )
+            )
+          )
+        : [];
+      post.serviceKeys = cleaned;
+    }
+    // Accept either `skillsRequired` or `skills` (older FE casing)
     if (skillsRequired !== undefined) post.skillsRequired = skillsRequired;
+    else if (skills !== undefined) post.skillsRequired = skills;
     if (location !== undefined) post.location = location;
     if (pay !== undefined) post.budget = pay;
     if (status !== undefined) post.status = status;

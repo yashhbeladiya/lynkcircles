@@ -2,10 +2,11 @@ import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
-import { Clock, MapPin, Users, Wallet } from "lucide-react";
+import { Clock, MapPin, Sparkles, Users, Wallet } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 
 import { UserAvatar, StatusBadge } from "@/components/ui";
+import { serviceLabel } from "@/data/serviceCatalog";
 import type { JobPost, JobStatus } from "@/types/jobPost";
 
 interface Props {
@@ -78,7 +79,29 @@ export const JobPostCard = ({ job }: Props) => {
             Posted {formatDistanceToNowStrict(new Date(job.createdAt))} ago
           </Typography>
         </Box>
-        <StatusBadge tone={statusTone(job.status)}>{job.status}</StatusBadge>
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0.5 }}>
+          <StatusBadge tone={statusTone(job.status)}>{job.status}</StatusBadge>
+          {job.match?.hasMatch ? (
+            <Box
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.25,
+                color: "primary.main",
+                fontSize: "0.625rem",
+                fontWeight: 600,
+                textTransform: "uppercase",
+                letterSpacing: "0.04em",
+              }}
+              aria-label={`Matches ${job.match.matchedKeys.length} of your services`}
+            >
+              <Sparkles size={10} aria-hidden />
+              <span>
+                Matches {job.match.matchedKeys.length}/{job.match.totalKeys || job.match.matchedKeys.length}
+              </span>
+            </Box>
+          ) : null}
+        </Box>
       </Box>
 
       {job.description ? (
@@ -98,21 +121,60 @@ export const JobPostCard = ({ job }: Props) => {
         </Typography>
       ) : null}
 
+      {/* Service chips from the canonical catalog. Matched services
+          (the ones in this Worker's offered list) get tinted to flag
+          why the job surfaced for them. */}
+      {job.serviceKeys && job.serviceKeys.length > 0 ? (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.25 }}>
+          {job.serviceKeys.slice(0, 5).map((key) => {
+            const matched = job.match?.matchedKeys?.includes(key);
+            return (
+              <Chip
+                key={key}
+                label={serviceLabel(key)}
+                size="small"
+                color={matched ? "primary" : "default"}
+                variant={matched ? "filled" : "outlined"}
+                sx={{ fontSize: "0.6875rem", height: 22 }}
+              />
+            );
+          })}
+          {job.serviceKeys.length > 5 ? (
+            <Chip
+              label={`+${job.serviceKeys.length - 5}`}
+              size="small"
+              variant="outlined"
+              sx={{ fontSize: "0.6875rem", height: 22 }}
+            />
+          ) : null}
+        </Box>
+      ) : null}
+
+      {/* Free-text additional requirements (must speak X, brand
+          familiarity, etc.) sit underneath the service chips so a
+          Worker can tell the catalog tags apart from the extras. */}
       {job.skillsRequired.length > 0 ? (
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1.5 }}>
-          {job.skillsRequired.slice(0, 5).map((skill) => (
+          {job.skillsRequired.slice(0, 4).map((skill) => (
             <Chip
               key={skill}
               label={skill}
               size="small"
-              sx={{ fontSize: "0.6875rem", height: 22 }}
+              variant="outlined"
+              sx={{
+                fontSize: "0.625rem",
+                height: 20,
+                borderStyle: "dashed",
+                color: "text.secondary",
+              }}
             />
           ))}
-          {job.skillsRequired.length > 5 ? (
+          {job.skillsRequired.length > 4 ? (
             <Chip
-              label={`+${job.skillsRequired.length - 5}`}
+              label={`+${job.skillsRequired.length - 4}`}
               size="small"
-              sx={{ fontSize: "0.6875rem", height: 22 }}
+              variant="outlined"
+              sx={{ fontSize: "0.625rem", height: 20 }}
             />
           ) : null}
         </Box>

@@ -1,4 +1,4 @@
-import { useEffect, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -6,10 +6,15 @@ import DialogActions from "@mui/material/DialogActions";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import ListSubheader from "@mui/material/ListSubheader";
+import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 
 import { useCreateJobPost } from "@/hooks/useJobPosts";
+import { useServiceCatalog } from "@/hooks/useServiceCatalog";
+import { serviceLabel } from "@/data/serviceCatalog";
 
 interface Props {
   open: boolean;
@@ -17,14 +22,21 @@ interface Props {
 }
 
 /**
- * Modal for a Client to post a new job. Marketplace-flavored fields:
- * title + description, skills as a tagged input (press Enter to add
- * a chip), location, budget (free-form string — "$500 fixed" or
- * "$25/hr" both work), optional required-by and deadline dates.
+ * Modal for a Client to post a new job. Two skill inputs on purpose:
+ *
+ *  1. **Services needed** — multi-select from the canonical catalog.
+ *     This is what skill-matching keys off. Required.
+ *  2. **Extra requirements** — free-text chip input for must-haves
+ *     outside the catalog ("Must speak Hindi", "2 yrs minimum with
+ *     X brand"). Optional. Rendered separately on the job card so
+ *     a Worker can tell at a glance which line items the matcher
+ *     actually scored against.
  */
 export const CreateJobPostDialog = ({ open, onClose }: Props) => {
+  const { data: categories } = useServiceCatalog();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [serviceKeys, setServiceKeys] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [location, setLocation] = useState("");
@@ -37,6 +49,7 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
     if (!open) return;
     setTitle("");
     setDescription("");
+    setServiceKeys([]);
     setSkillInput("");
     setSkills([]);
     setLocation("");
@@ -67,6 +80,7 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
   const canSubmit =
     title.trim().length >= 4 &&
     description.trim().length >= 10 &&
+    serviceKeys.length > 0 &&
     location.trim().length >= 2 &&
     pay.trim().length >= 1 &&
     !create.isPending;
@@ -77,6 +91,7 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
     await create.mutateAsync({
       title: title.trim(),
       description: description.trim(),
+      serviceKeys,
       skills,
       location: location.trim(),
       pay: pay.trim(),
@@ -85,6 +100,28 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
     });
     onClose();
   };
+
+  const flatOptions = useMemo(
+    () =>
+      (categories ?? []).flatMap((cat) => [
+        <ListSubheader
+          key={`cat-${cat.key}`}
+          sx={{
+            fontSize: "0.6875rem",
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+          }}
+        >
+          {cat.label}
+        </ListSubheader>,
+        ...cat.services.map((svc) => (
+          <MenuItem key={svc.key} value={svc.key} sx={{ pl: 3 }}>
+            {svc.label}
+          </MenuItem>
+        )),
+      ]),
+    [categories]
+  );
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -111,10 +148,54 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
             fullWidth
           />
 
+          <TextField
+            select
+            label="Services needed"
+            value={serviceKeys}
+            onChange={(e) => {
+              const v = e.target.value;
+              setServiceKeys(Array.isArray(v) ? v : [v]);
+            }}
+            required
+            fullWidth
+            helperText="Workers offering these services will see your job first."
+            slotProps={{
+              select: {
+                multiple: true,
+                renderValue: (selected) => {
+                  const list = (selected as string[]) ?? [];
+                  if (!list.length)
+                    return (
+                      <Typography variant="caption" color="text.tertiary">
+                        Pick one or more
+                      </Typography>
+                    );
+                  return (
+                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                      {list.map((key) => (
+                        <Chip
+                          key={key}
+                          label={serviceLabel(key)}
+                          size="small"
+                          sx={{ fontSize: "0.6875rem", height: 20 }}
+                        />
+                      ))}
+                    </Box>
+                  );
+                },
+                MenuProps: {
+                  slotProps: { paper: { sx: { maxHeight: 400 } } },
+                },
+              },
+            }}
+          >
+            {flatOptions}
+          </TextField>
+
           <Box>
             <TextField
-              label="Skills needed"
-              placeholder="Type a skill and press Enter (e.g. Carpentry)"
+              label="Extra requirements (optional)"
+              placeholder='e.g. "Must speak Hindi", "2 yrs exp with X brand" — press Enter to add'
               value={skillInput}
               onChange={(e) => setSkillInput(e.target.value)}
               onKeyDown={handleSkillKey}
@@ -137,10 +218,16 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
             ) : null}
           </Box>
 
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gap: 1.5,
+            }}
+          >
             <TextField
               label="Location"
-              placeholder="Brooklyn, NY"
+              placeholder="Mumbai, Maharashtra"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               required
@@ -148,7 +235,7 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
             />
             <TextField
               label="Budget"
-              placeholder="$500 fixed or $25/hr"
+              placeholder="₹500 fixed, ₹25/hr, ₹20,000/month + bonus"
               value={pay}
               onChange={(e) => setPay(e.target.value)}
               required
@@ -180,7 +267,9 @@ export const CreateJobPostDialog = ({ open, onClose }: Props) => {
             type="submit"
             variant="contained"
             disabled={!canSubmit}
-            startIcon={create.isPending ? <CircularProgress size={12} color="inherit" /> : null}
+            startIcon={
+              create.isPending ? <CircularProgress size={12} color="inherit" /> : null
+            }
           >
             Post job
           </Button>

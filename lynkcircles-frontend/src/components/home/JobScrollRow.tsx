@@ -2,10 +2,11 @@ import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Typography from "@mui/material/Typography";
-import { MapPin, Users, Wallet } from "lucide-react";
+import { MapPin, Sparkles, Users, Wallet } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 
 import { StatusBadge } from "@/components/ui";
+import { serviceLabel } from "@/data/serviceCatalog";
 import type { JobPost, JobStatus } from "@/types/jobPost";
 
 interface Props {
@@ -82,7 +83,25 @@ export const JobScrollRow = ({ jobs }: Props) => {
           })}
         >
           <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
-            <StatusBadge tone={statusTone(job.status)}>{job.status}</StatusBadge>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              <StatusBadge tone={statusTone(job.status)}>{job.status}</StatusBadge>
+              {job.match?.hasMatch ? (
+                <Box
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.25,
+                    color: "primary.main",
+                    fontSize: "0.625rem",
+                    fontWeight: 600,
+                  }}
+                  aria-label={`Matches ${job.match.matchedKeys.length} of your services`}
+                >
+                  <Sparkles size={10} aria-hidden />
+                  <span>Match</span>
+                </Box>
+              ) : null}
+            </Box>
             <Typography
               variant="caption"
               sx={{ color: "text.tertiary", fontSize: "0.625rem" }}
@@ -104,20 +123,26 @@ export const JobScrollRow = ({ jobs }: Props) => {
           >
             {job.jobTitle}
           </Typography>
-          {job.skillsRequired.length > 0 ? (
+          {job.serviceKeys && job.serviceKeys.length > 0 ? (
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-              {job.skillsRequired.slice(0, 3).map((skill) => (
+              {job.serviceKeys.slice(0, 3).map((key) => {
+                const matched = job.match?.matchedKeys?.includes(key);
+                return (
+                  <Chip
+                    key={key}
+                    label={serviceLabel(key)}
+                    size="small"
+                    color={matched ? "primary" : "default"}
+                    variant={matched ? "filled" : "outlined"}
+                    sx={{ fontSize: "0.625rem", height: 18 }}
+                  />
+                );
+              })}
+              {job.serviceKeys.length > 3 ? (
                 <Chip
-                  key={skill}
-                  label={skill}
+                  label={`+${job.serviceKeys.length - 3}`}
                   size="small"
-                  sx={{ fontSize: "0.625rem", height: 18 }}
-                />
-              ))}
-              {job.skillsRequired.length > 3 ? (
-                <Chip
-                  label={`+${job.skillsRequired.length - 3}`}
-                  size="small"
+                  variant="outlined"
                   sx={{ fontSize: "0.625rem", height: 18 }}
                 />
               ) : null}
