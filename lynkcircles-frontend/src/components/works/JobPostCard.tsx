@@ -7,6 +7,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 
 import { UserAvatar, StatusBadge } from "@/components/ui";
 import { serviceLabel } from "@/data/serviceCatalog";
+import { formatDistance } from "@/lib/geo";
 import type { JobPost, JobStatus } from "@/types/jobPost";
 
 interface Props {
@@ -195,7 +196,11 @@ export const JobPostCard = ({ job }: Props) => {
         {job.location ? (
           <MetaItem
             icon={<MapPin size={12} aria-hidden />}
-            text={job.location}
+            text={
+              formatDistance(job.distanceKm)
+                ? `${job.location} · ${formatDistance(job.distanceKm)}`
+                : job.location
+            }
           />
         ) : null}
         {job.deadline ? (

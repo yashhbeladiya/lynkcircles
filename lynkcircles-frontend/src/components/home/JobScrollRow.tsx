@@ -7,6 +7,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 
 import { StatusBadge } from "@/components/ui";
 import { serviceLabel } from "@/data/serviceCatalog";
+import { formatDistance } from "@/lib/geo";
 import type { JobPost, JobStatus } from "@/types/jobPost";
 
 interface Props {
@@ -165,7 +166,14 @@ export const JobScrollRow = ({ jobs }: Props) => {
               <Meta icon={<Wallet size={11} aria-hidden />} text={job.budget} />
             ) : null}
             {job.location ? (
-              <Meta icon={<MapPin size={11} aria-hidden />} text={job.location} />
+              <Meta
+                icon={<MapPin size={11} aria-hidden />}
+                text={
+                  formatDistance(job.distanceKm) ??
+                  job.location.split(",")[0] ??
+                  job.location
+                }
+              />
             ) : null}
             <Meta
               icon={<Users size={11} aria-hidden />}

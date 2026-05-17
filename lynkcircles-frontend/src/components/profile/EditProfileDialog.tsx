@@ -9,10 +9,12 @@ import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
-import { Camera, X } from "lucide-react";
+import { Camera, MapPin, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 import { UserAvatar } from "@/components/ui";
 import { useUpdateProfile } from "@/hooks/useProfile";
+import { getCurrentPosition } from "@/lib/geo";
 import type { UserProfile } from "@/types/user";
 
 interface Props {
@@ -36,6 +38,24 @@ const readAsDataUri = (file: File): Promise<string> =>
  * are sent as base64 data URIs (matches the existing backend contract
  * which forwards them to Cloudinary).
  */
+type Coords = { lat: number; lng: number } | null;
+
+const initialCoords = (user: UserProfile): Coords => {
+  if (user.locationPoint?.coordinates?.length === 2) {
+    const [lng, lat] = user.locationPoint.coordinates;
+    if (typeof lat === "number" && typeof lng === "number") return { lat, lng };
+  }
+  const legacy = user.locationCoordinates;
+  if (
+    legacy &&
+    typeof legacy.lat === "number" &&
+    typeof legacy.long === "number"
+  ) {
+    return { lat: legacy.lat, lng: legacy.long };
+  }
+  return null;
+};
+
 export const EditProfileDialog = ({ user, open, onClose }: Props) => {
   const [firstName, setFirstName] = useState(user.firstName);
   const [lastName, setLastName] = useState(user.lastName);
@@ -43,6 +63,8 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
   const [bio, setBio] = useState(user.bio ?? "");
   const [city, setCity] = useState(user.location?.city ?? "");
   const [state, setState] = useState(user.location?.state ?? "");
+  const [coords, setCoords] = useState<Coords>(initialCoords(user));
+  const [locating, setLocating] = useState(false);
   const [profileDataUri, setProfileDataUri] = useState<string | null>(null);
   const [bannerDataUri, setBannerDataUri] = useState<string | null>(null);
   const profileInputRef = useRef<HTMLInputElement>(null);
@@ -60,9 +82,27 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
     setBio(user.bio ?? "");
     setCity(user.location?.city ?? "");
     setState(user.location?.state ?? "");
+    setCoords(initialCoords(user));
     setProfileDataUri(null);
     setBannerDataUri(null);
   }, [open, user]);
+
+  const captureLocation = async () => {
+    setLocating(true);
+    try {
+      const next = await getCurrentPosition();
+      if (!next) {
+        toast.error("Couldn't get your location. Check browser permissions.");
+        return;
+      }
+      setCoords(next);
+      toast.success("Location captured");
+    } finally {
+      setLocating(false);
+    }
+  };
+
+  const clearLocation = () => setCoords(null);
 
   const handleFile = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -86,6 +126,13 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
     }
     if (profileDataUri) payload.profilePicture = profileDataUri;
     if (bannerDataUri) payload.bannerImage = bannerDataUri;
+
+    const initial = initialCoords(user);
+    const coordsChanged =
+      (coords?.lat !== initial?.lat) || (coords?.lng !== initial?.lng);
+    if (coordsChanged && coords) {
+      payload.coordinates = coords;
+    }
 
     if (Object.keys(payload).length === 0) {
       onClose();
@@ -250,6 +297,66 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
             sx={{ gridColumn: { sm: "1 / -1" } }}
             fullWidth
           />
+
+          {/* Geolocation. Captured once and stored on the profile so
+              every "near me" feature on the platform can use it. We
+              never auto-prompt — the user explicitly clicks. */}
+          <Box
+            sx={{
+              gridColumn: { sm: "1 / -1" },
+              p: 1.5,
+              borderRadius: 1.5,
+              border: 1,
+              borderColor: "divider",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1.5,
+              flexWrap: "wrap",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+              <MapPin size={14} aria-hidden />
+              <Box>
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 600, fontSize: "0.8125rem" }}
+                >
+                  Your location
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "text.tertiary", fontSize: "0.6875rem" }}
+                >
+                  {coords
+                    ? `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`
+                    : "Captures your coordinates so jobs and Workers near you sort by distance"}
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ display: "flex", gap: 1 }}>
+              {coords ? (
+                <Button size="small" onClick={clearLocation} color="inherit">
+                  Clear
+                </Button>
+              ) : null}
+              <Button
+                size="small"
+                variant={coords ? "outlined" : "contained"}
+                onClick={captureLocation}
+                disabled={locating}
+                startIcon={
+                  locating ? (
+                    <CircularProgress size={12} color="inherit" />
+                  ) : (
+                    <MapPin size={13} />
+                  )
+                }
+              >
+                {coords ? "Update" : "Use my location"}
+              </Button>
+            </Box>
+          </Box>
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>

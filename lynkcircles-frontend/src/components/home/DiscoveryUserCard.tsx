@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import { MapPin, ShieldCheck } from "lucide-react";
 
 import { UserAvatar } from "@/components/ui";
+import { formatDistance } from "@/lib/geo";
 import type { UserSummary } from "@/types/user";
 
 interface Props {
@@ -89,7 +90,7 @@ export const DiscoveryUserCard = ({ user }: Props) => {
           {user.headline}
         </Typography>
       ) : null}
-      {location ? (
+      {location || formatDistance(user.distanceKm) ? (
         <Box
           sx={{
             mt: 0.5,
@@ -101,7 +102,9 @@ export const DiscoveryUserCard = ({ user }: Props) => {
           }}
         >
           <MapPin size={10} aria-hidden />
-          <span>{location}</span>
+          <span>
+            {formatDistance(user.distanceKm) ?? location}
+          </span>
         </Box>
       ) : null}
     </Box>

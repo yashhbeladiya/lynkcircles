@@ -1,11 +1,14 @@
 import { validateEmail, uploadToCloudinary } from "../util/util.js";
 import User from "../models/user.model.js";
 
+import { haversineKm, extractLatLng } from "../lib/geo.js";
+
 export const getSuggestedConnections = async (req, res) => {
     try {
-      // Get the current user's info for location and services offered
+      // Pull the location fields too so we can sort suggestions by
+      // distance from the asking user.
       const currentUser = await User.findById(req.user._id).select(
-        "location connections headline"
+        "location connections headline locationPoint locationCoordinates"
       );
       
       if (!currentUser) {
@@ -87,9 +90,27 @@ export const getSuggestedConnections = async (req, res) => {
         ]);
       }
   
-      // console.log("Suggested Connections: ", suggestedConnections);
-  
-      // Send suggestions in response
+      // Attach distance (km) from the asking user when we have their
+      // coordinates. Sort by distance asc, then by whatever the
+      // original query order was. Distance is the headline marketplace
+      // signal — a verified plumber 30 km away beats an unverified one
+      // 3 km away most of the time, but we let the FE see both fields
+      // and decide.
+      const meCoord = extractLatLng(currentUser);
+      if (meCoord) {
+        suggestedConnections = suggestedConnections.map((u) => {
+          const them = extractLatLng(u);
+          const distanceKm = them ? haversineKm(meCoord, them) : null;
+          return { ...(u.toObject ? u.toObject() : u), distanceKm };
+        });
+        suggestedConnections.sort((a, b) => {
+          if (a.distanceKm == null && b.distanceKm == null) return 0;
+          if (a.distanceKm == null) return 1;
+          if (b.distanceKm == null) return -1;
+          return a.distanceKm - b.distanceKm;
+        });
+      }
+
       res.status(200).json(suggestedConnections);
     } catch (error) {
       console.error("Error fetching suggested connections:", error);
@@ -144,10 +165,13 @@ export const updateProfile = async (req, res) => {
       "headline",
       "location",
       "bio",
-      "profilePicture",  // Changed to match frontend
-      "bannerImage",        // Changed to match frontend
+      "profilePicture",
+      "bannerImage",
       "socialLinks",
       "status",
+      // New: client-supplied { lat, lng } object. Mapped into the
+      // GeoJSON locationPoint field below so geo queries work.
+      "coordinates",
     ];
 
     const updatedFields = {};
@@ -220,6 +244,25 @@ export const updateProfile = async (req, res) => {
       // For other fields, directly assign
       if (["headline", "location", "bio"].includes(key)) {
         updatedFields[key] = body[key];
+      }
+
+      if (key === "socialLinks") {
+        updatedFields.socialLinks = body.socialLinks;
+      }
+
+      // Location coordinates: take { lat, lng } from the client,
+      // mirror into both the legacy `locationCoordinates` and the new
+      // GeoJSON `locationPoint`. Mirror so old read paths keep working
+      // while new geo queries get a proper indexed Point.
+      if (key === "coordinates" && body.coordinates) {
+        const { lat, lng } = body.coordinates;
+        if (typeof lat === "number" && typeof lng === "number") {
+          updatedFields.locationCoordinates = { lat, long: lng };
+          updatedFields.locationPoint = {
+            type: "Point",
+            coordinates: [lng, lat],
+          };
+        }
       }
     }
 

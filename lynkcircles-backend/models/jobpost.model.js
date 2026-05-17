@@ -27,8 +27,19 @@ const jobPostSchema = new mongoose.Schema({
     default: "Open",
   },
   applicants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  /**
+   * GeoJSON Point for geospatial queries. Stored as [longitude, latitude].
+   * Falls back to the client's profile location when the FE doesn't
+   * pass an explicit coordinate set on createJob.
+   */
+  locationPoint: {
+    type: { type: String, enum: ["Point"], default: "Point" },
+    coordinates: { type: [Number] },
+  },
   createdAt: { type: Date, default: Date.now },
 });
+
+jobPostSchema.index({ locationPoint: "2dsphere" });
 
 const JobPost = mongoose.model("JobPost", jobPostSchema);
 

@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import { Briefcase, MapPin, ShieldCheck } from "lucide-react";
 
 import { UserAvatar } from "@/components/ui";
+import { formatDistance } from "@/lib/geo";
 import type { UserSummary } from "@/types/user";
 
 interface Props {
@@ -101,7 +102,7 @@ export const NetworkRow = ({ user, actions }: Props) => {
             {user.headline}
           </Typography>
         ) : null}
-        {location ? (
+        {location || formatDistance(user.distanceKm) ? (
           <Typography
             variant="caption"
             sx={{
@@ -114,7 +115,7 @@ export const NetworkRow = ({ user, actions }: Props) => {
             }}
           >
             <MapPin size={11} aria-hidden />
-            {location}
+            {[location, formatDistance(user.distanceKm)].filter(Boolean).join(" · ")}
           </Typography>
         ) : null}
       </Box>

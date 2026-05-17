@@ -31,6 +31,11 @@ export interface AuthUser {
     lat?: number;
     long?: number;
   };
+  /** GeoJSON Point from the backend. Coordinates are [longitude, latitude]. */
+  locationPoint?: {
+    type?: "Point";
+    coordinates?: [number, number];
+  };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -51,6 +56,9 @@ export interface UserSummary {
     zipCode?: string;
   };
   connections?: string[];
+  /** Set by endpoints that compare to the requesting user's location.
+   *  Null if either side doesn't have coordinates. */
+  distanceKm?: number | null;
 }
 
 /** A pending connection request as returned by GET /connections/requests. */

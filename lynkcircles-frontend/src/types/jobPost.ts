@@ -30,6 +30,9 @@ export interface JobPost {
   /** Present only when the requesting user is a Worker — server attaches
    *  the match block so the UI can sort/tag without re-computing. */
   match?: JobMatch;
+  /** Distance in km from the requesting user (null if either side
+   *  has no coordinates). Server-computed; FE just formats. */
+  distanceKm?: number | null;
   createdAt: string;
 }
 

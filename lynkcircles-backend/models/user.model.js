@@ -54,6 +54,18 @@ const userSchema = new mongoose.Schema(
     },
     lastLogin: { type: Date },
     lastActivity: { type: Date },
+    /**
+     * GeoJSON Point for geospatial queries (2dsphere index, below).
+     * Coordinates are stored as [longitude, latitude] per the GeoJSON
+     * spec — this catches a lot of people out, so write helpers
+     * always take {lat, lng} and the schema reorders on the way in.
+     */
+    locationPoint: {
+      type: { type: String, enum: ["Point"], default: "Point" },
+      coordinates: { type: [Number] },
+    },
+    /** Legacy lat/long object retained for backward compatibility on
+     *  existing records. New writes also update locationPoint. */
     locationCoordinates: {
       lat: { type: Number },
       long: { type: Number },
@@ -65,6 +77,10 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Required for the $near / $geoNear / $geoWithin queries that power
+// "workers near me" and the distance display on every Worker tile.
+userSchema.index({ locationPoint: "2dsphere" });
 
 const User = mongoose.model("User", userSchema);
 
