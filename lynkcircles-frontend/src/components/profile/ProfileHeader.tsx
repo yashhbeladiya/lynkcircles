@@ -36,74 +36,68 @@ const formatLocation = (loc?: UserProfile["location"]) => {
   return parts.length ? parts.join(", ") : null;
 };
 
-/**
- * Marketplace-shape profile header. The connection request/accept/
- * connected graph is gone — for a service marketplace, "connect" was
- * friction (I don't want a relationship, I want to hire someone or
- * message them). The two primary actions now are:
- *
- *   Save   — bookmark a Worker for later (Client's perspective).
- *            Toggles via /users/save/:id; optimistic.
- *   Message — open the chat with this user.
- *
- * Both are available regardless of any prior relationship. If you've
- * never met someone before, you can still message them. That's how
- * Airbnb/Upwork/Thumbtack work — and the way a marketplace should.
- */
 export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
   const { t } = useTranslation();
   const isSaved = useIsSaved(user._id);
   const toggleSave = useToggleSaveWorker();
 
   const location = formatLocation(user.location);
-  // The Save button mostly makes sense for Workers — a Client doesn't
-  // really "save" another Client for a future job. Hide it on Client
-  // profiles to keep the action surface focused.
   const showSave = user.role === "Worker";
-  // WhatsApp shortcut: only when phonePublic + phone is set. India
-  // primary market expects this — many users prefer WhatsApp to the
-  // in-app inbox.
   const waLink =
     user.phonePublic && user.phone
       ? buildWhatsappLink(
           user.phone,
-          `Hi ${user.firstName}, I found you on LynkCircles.`
+          `Hi ${user.firstName}, I found you on LynkCircles.`,
         )
       : null;
 
   return (
     <Box
-      sx={(theme) => ({
-        borderRadius: 2,
+      sx={{
+        borderRadius: 3,
         border: 1,
         borderColor: "divider",
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: "background.paper",
         overflow: "hidden",
         mb: 2,
-      })}
+        boxShadow: (t) =>
+          t.palette.mode === "dark"
+            ? "0 4px 12px -4px rgba(0,0,0,0.4)"
+            : "0 4px 12px -4px rgba(0,0,0,0.06)",
+      }}
     >
-      {/* Banner */}
       <Box
         sx={{
-          height: { xs: 120, sm: 168 },
+          height: { xs: 140, sm: 200 },
           background: user.bannerImage
             ? `url(${user.bannerImage}) center/cover`
-            : (t) =>
-                t.palette.mode === "dark"
-                  ? `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)`
-                  : `linear-gradient(135deg, ${t.palette.primary.light ?? t.palette.primary.main} 0%, ${t.palette.primary.main} 100%)`,
+            : (theme) =>
+                theme.palette.mode === "dark"
+                  ? "linear-gradient(135deg, #312e81 0%, #4f46e5 60%, #6366f1 100%)"
+                  : "linear-gradient(135deg, #4338ca 0%, #6366f1 55%, #818cf8 100%)",
+          position: "relative",
+          "&::after": user.bannerImage
+            ? undefined
+            : {
+                content: '""',
+                position: "absolute",
+                inset: 0,
+                background:
+                  "radial-gradient(ellipse at top right, rgba(255,255,255,0.2), transparent 60%)",
+                pointerEvents: "none",
+              },
         }}
       />
 
-      {/* Body */}
-      <Box sx={{ px: { xs: 2, sm: 3 }, pb: 3 }}>
+      <Box sx={{ px: { xs: 2.5, sm: 3.5 }, pb: { xs: 2.5, sm: 3 } }}>
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "flex-end",
-            gap: 1.5,
-            mt: { xs: -4, sm: -5 },
+            gap: 2,
+            mt: { xs: -5, sm: -6 },
+            flexWrap: "wrap",
           }}
         >
           <Box
@@ -111,19 +105,29 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
               borderRadius: "50%",
               outline: "4px solid",
               outlineColor: "background.paper",
-              boxShadow: 2,
+              boxShadow: 3,
+              flexShrink: 0,
             }}
           >
             <UserAvatar user={user} size="xl" verified={user.verified} />
           </Box>
 
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", pt: 5 }}>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", pt: { xs: 1.5, sm: 6 } }}>
             {isOwn ? (
               <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Pencil size={14} />}
+                variant="contained"
+                size="medium"
+                startIcon={<Pencil size={16} />}
                 onClick={onEdit}
+                sx={{
+                  px: 2.5,
+                  py: 1,
+                  fontWeight: 600,
+                  boxShadow: (t) =>
+                    t.palette.mode === "dark"
+                      ? "0 6px 14px -4px rgba(99,102,241,0.5)"
+                      : "0 6px 14px -4px rgba(67,56,202,0.35)",
+                }}
               >
                 {t("profile.actions.editProfile")}
               </Button>
@@ -133,8 +137,17 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                   component={Link}
                   to={`/messages/${user._id}`}
                   variant="contained"
-                  size="small"
-                  startIcon={<MessageSquare size={14} />}
+                  size="medium"
+                  startIcon={<MessageSquare size={16} />}
+                  sx={{
+                    px: 2.5,
+                    py: 1,
+                    fontWeight: 600,
+                    boxShadow: (t) =>
+                      t.palette.mode === "dark"
+                        ? "0 6px 14px -4px rgba(99,102,241,0.5)"
+                        : "0 6px 14px -4px rgba(67,56,202,0.35)",
+                  }}
                 >
                   {t("profile.actions.message")}
                 </Button>
@@ -146,12 +159,12 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                       target="_blank"
                       rel="noreferrer noopener"
                       variant="outlined"
-                      size="small"
-                      startIcon={<MessageCircle size={14} />}
+                      size="medium"
+                      startIcon={<MessageCircle size={16} />}
                       sx={{
-                        // WhatsApp brand green — staying off the
-                        // theme palette here is intentional, this is
-                        // an external-platform CTA.
+                        px: 2,
+                        py: 1,
+                        fontWeight: 600,
                         borderColor: "#25D366",
                         color: "#25D366",
                         "&:hover": {
@@ -168,16 +181,17 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                   <Button
                     variant={isSaved ? "contained" : "outlined"}
                     color={isSaved ? "success" : "primary"}
-                    size="small"
+                    size="medium"
                     startIcon={
                       isSaved ? (
-                        <BookmarkCheck size={14} />
+                        <BookmarkCheck size={16} />
                       ) : (
-                        <Bookmark size={14} />
+                        <Bookmark size={16} />
                       )
                     }
                     onClick={() => toggleSave.mutate(user._id)}
                     disabled={toggleSave.isPending}
+                    sx={{ px: 2, py: 1, fontWeight: 600 }}
                   >
                     {isSaved
                       ? t("profile.actions.saved")
@@ -189,46 +203,63 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
           </Box>
         </Box>
 
-        <Box sx={{ mt: 1.5 }}>
+        <Box sx={{ mt: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
             <Typography
               variant="h4"
-              sx={{ fontWeight: 600, letterSpacing: "-0.02em" }}
+              sx={{
+                fontWeight: 800,
+                letterSpacing: "-0.02em",
+                fontSize: { xs: "1.5rem", sm: "1.875rem" },
+              }}
             >
               {user.firstName} {user.lastName}
             </Typography>
             {user.verified ? (
-              <ShieldCheck
-                size={18}
-                color="var(--mui-palette-success-main, #10b981)"
-                aria-label="Verified"
-              />
+              <Tooltip title="Verified worker">
+                <ShieldCheck
+                  size={22}
+                  color="var(--mui-palette-success-main, #10b981)"
+                  aria-label="Verified"
+                />
+              </Tooltip>
             ) : null}
           </Box>
           {user.headline ? (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{ mt: 0.5, fontSize: { xs: "0.9375rem", sm: "1rem" } }}
+            >
               {user.headline}
             </Typography>
           ) : null}
 
-          {/* Meta chips. Dropped the "N connections" chip — it was a
-              LinkedIn-shape stat. The role + location chips carry the
-              marketplace-relevant context. */}
-          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1.5 }}>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1.75 }}>
             {user.role ? (
               <Chip
                 size="small"
-                icon={<Briefcase size={12} aria-hidden />}
+                icon={<Briefcase size={13} aria-hidden />}
                 label={user.role}
-                sx={{ fontSize: "0.6875rem", height: 22 }}
+                sx={{
+                  fontSize: "0.75rem",
+                  height: 26,
+                  fontWeight: 600,
+                  px: 0.5,
+                }}
               />
             ) : null}
             {location ? (
               <Chip
                 size="small"
-                icon={<MapPin size={12} aria-hidden />}
+                icon={<MapPin size={13} aria-hidden />}
                 label={location}
-                sx={{ fontSize: "0.6875rem", height: 22 }}
+                sx={{
+                  fontSize: "0.75rem",
+                  height: 26,
+                  fontWeight: 600,
+                  px: 0.5,
+                }}
               />
             ) : null}
           </Box>
