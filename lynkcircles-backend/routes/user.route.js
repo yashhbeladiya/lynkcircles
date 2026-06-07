@@ -1,5 +1,7 @@
 import express from "express";
 import { protectRoute } from "../middleware/auth.middleware.js";
+import { validate } from "../lib/validate.js";
+import { updateProfileSchema } from "../schemas/profile.schema.js";
 import {
   getSuggestedConnections,
   getPublicProfile,
@@ -23,7 +25,7 @@ const router = express.Router();
 // Static / specific paths before the catch-all `/:id`.
 router.get("/suggestions", protectRoute, getSuggestedConnections);
 router.get("/profile/:username", protectRoute, getPublicProfile);
-router.put("/profile", protectRoute, updateProfile);
+router.put("/profile", protectRoute, validate(updateProfileSchema), updateProfile);
 
 router.post("/connect/:username", protectRoute, connectUser);
 router.post("/follow/:clientId", protectRoute, followClient);

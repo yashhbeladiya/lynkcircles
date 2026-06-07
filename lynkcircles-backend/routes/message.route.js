@@ -1,6 +1,8 @@
 import express from "express";
 import multer from "multer";
 import { protectRoute } from "../middleware/auth.middleware.js";
+import { validate } from "../lib/validate.js";
+import { createMessageSchema } from "../schemas/message.schema.js";
 
 import {
   createMessage,
@@ -26,7 +28,7 @@ router.post("/upload", protectRoute, upload.single("file"), uploadAttachment);
 router.get("/conversations", protectRoute, getConversations);
 router.get("/conversations/:conversationId", protectRoute, getConversation);
 
-router.post("/", protectRoute, createMessage);
+router.post("/", protectRoute, validate(createMessageSchema), createMessage);
 router.get("/:recipientId", protectRoute, getMessages);
 
 export default router;

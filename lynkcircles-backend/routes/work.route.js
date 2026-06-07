@@ -1,5 +1,11 @@
 import express from "express";
 import { protectRoute } from "../middleware/auth.middleware.js";
+import { validate } from "../lib/validate.js";
+import {
+  createWorkSchema,
+  updateWorkSchema,
+  reviewJobSchema,
+} from "../schemas/work.schema.js";
 import {
   applyForWork,
   createWork,
@@ -20,7 +26,7 @@ const router = express.Router();
 
 // Static paths first — `/:id` swallowed every named segment previously,
 // so `myapplications`/`applicants` were never reachable.
-router.post("/create", protectRoute, createWork);
+router.post("/create", protectRoute, validate(createWorkSchema), createWork);
 router.get("/myapplications", protectRoute, getMyApplications);
 router.get("/pastWork", protectRoute, getMyWorkPosts);
 
@@ -38,9 +44,9 @@ router.delete("/:id/withdraw", protectRoute, withdrawApplication);
 // flips automatically when criteria are met.
 router.post("/:id/hire/:workerId", protectRoute, hireApplicant);
 router.post("/:id/complete", protectRoute, markJobComplete);
-router.post("/:id/review", protectRoute, reviewCompletedJob);
+router.post("/:id/review", protectRoute, validate(reviewJobSchema), reviewCompletedJob);
 
-router.put("/update/:id", protectRoute, updateWorkPost);
+router.put("/update/:id", protectRoute, validate(updateWorkSchema), updateWorkPost);
 router.delete("/delete/:id", protectRoute, deleteWorkPost);
 
 // Catch-all single-post fetch must come last.

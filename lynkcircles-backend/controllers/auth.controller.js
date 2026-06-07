@@ -8,22 +8,14 @@ export const signup = async (req, res) => {
     try {
         const { firstName, lastName, username, role, email, password } = req.body;
 
-        if (!firstName || !lastName || !username || !role || !email || !password) {
-            return res.status(400).json({ message: 'All fields are required' });
-        }
-
         const emailExists = await User.findOne({ email });
         if (emailExists) {
             return res.status(400).json({ message: 'Email already registered' });
         }
-        
-        if (password.length < 6) {
-            return res.status(400).json({ message: 'Password must be at least 6 characters long' });
-        }
 
         const usernameExists = await User.findOne({ username });
         if (usernameExists) {
-            return res.status(400).json({ message: 'User ID already exists' });
+            return res.status(400).json({ message: 'Username already taken' });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -65,34 +57,26 @@ export const login = async (req, res) => {
     try {
         const { username, password } = req.body;
 
-        console.log(username, password);
-
-        // Check if the user exists
         const user = await User.findOne({ username });
         if (!user) {
-            return res.status(400).json({message: "Invalid credentials"})
+            return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        // Check if the password is correct
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({message: "Invalid credentials"})
+            return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        // Create a token
         const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '3d' });
 
-        // Send the token in a HTTP-only cookie
-        res.cookie('token', token, { 
+        res.cookie('token', token, {
             httpOnly: true,
             maxAge: 3 * 24 * 60 * 60 * 1000,
             sameSite: 'Lax',
-            secure: process.env.NODE_ENV === 'production' ? true : false
+            secure: process.env.NODE_ENV === 'production',
         });
 
-        console.log('got a token');
-
-        res.json({ message: 'Logged in successfully' }); 
+        res.json({ message: 'Logged in successfully' });
 
     } catch (error) {
         console.error(`Error logging in user: ${error.message}`);
