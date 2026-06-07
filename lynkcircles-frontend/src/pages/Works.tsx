@@ -21,16 +21,6 @@ import type { JobPost } from "@/types/jobPost";
 
 type TabKey = "browse" | "applications" | "mine";
 
-/**
- * The actual Upwork-side of the app. Tabs differ by role:
- *
- * Worker  default → Browse jobs + My applications
- * Client  default → My posts + Browse jobs (so they can see what the
- *                   competition is offering) + a prominent Post a job CTA
- *
- * "Browse" is universal — anyone can scan open jobs, even Clients who
- * might recognize work they want to pass on to a Worker they know.
- */
 const Works = () => {
   const { data: authUser } = useAuthUser();
   const isClient = authUser?.role === "Client";
@@ -42,9 +32,6 @@ const Works = () => {
   const applications = useMyApplications(!isClient);
   const myPosts = useMyJobPosts(isClient);
 
-  // Workers see "applications" in the tab strip; clients see "mine".
-  // Tab layout is identical otherwise so the page muscle memory carries
-  // across roles.
   const tabs: { value: TabKey; label: string; count?: number }[] = useMemo(
     () => [
       { value: "browse", label: "Browse jobs", count: open.data?.length },

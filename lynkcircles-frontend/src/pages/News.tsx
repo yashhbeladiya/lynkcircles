@@ -13,13 +13,6 @@ import { ArticleCard } from "@/components/news/ArticleCard";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import { useNews } from "@/hooks/useNews";
 
-/**
- * Curated topics, marketplace-flavored. "Latest" lands on top
- * headlines; the rest filter News API's /everything endpoint by a
- * query that's specific to the kind of work this platform exists to
- * coordinate. A generic news feed would just be noise — these chips
- * make the page feel like it belongs in a trades marketplace.
- */
 const TOPICS: { key: string; label: string; query: string }[] = [
   { key: "latest", label: "Latest", query: "latest" },
   { key: "construction", label: "Construction", query: "construction industry" },
@@ -68,8 +61,6 @@ const News = () => {
     setActiveQuery(null);
   };
 
-  // First name personalizes the intro copy without leaking a full name
-  // into a passive prose paragraph.
   const greeting = authUser?.firstName ? `${authUser.firstName}, ` : "";
 
   return (
@@ -85,7 +76,6 @@ const News = () => {
         </Typography>
       </Box>
 
-      {/* Search box */}
       <Box
         sx={(theme) => ({
           display: "flex",
@@ -122,8 +112,6 @@ const News = () => {
         ) : null}
       </Box>
 
-      {/* Topic chips — disabled when an explicit search is active so
-          users can tell which filter is driving results. */}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 3 }}>
         {TOPICS.map((t) => (
           <Chip

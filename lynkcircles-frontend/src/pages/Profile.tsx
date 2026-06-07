@@ -55,16 +55,11 @@ const Profile = () => {
   }
 
   const isOwn = authUser?._id === profile._id;
-  // Marketplace sections only make sense for Workers. Clients hire,
-  // they don't list services — empty service/review slots on a Client
-  // profile would read as noise instead of substance.
   const isWorker = profile.role === "Worker";
 
   return (
     <Container maxWidth="md" sx={{ py: { xs: 2, md: 3 }, px: { xs: 1.5, md: 3 } }}>
       <ProfileHeader user={profile} isOwn={isOwn} onEdit={() => setEditOpen(true)} />
-      {/* Verification progress: own-profile + Worker + not-yet-verified.
-          The card hides itself if the user is already verified. */}
       {isOwn && isWorker ? <VerificationCard /> : null}
       <AboutSection user={profile} />
       {isWorker ? (

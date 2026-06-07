@@ -8,11 +8,6 @@ interface Props {
   icon?: LucideIcon;
 }
 
-/**
- * Shared placeholder shell for pages that aren't built yet. Lets us
- * route everything correctly without each page needing custom chrome,
- * and gives a consistent look while pages are filled in across phases.
- */
 export const PlaceholderPage = ({
   eyebrow,
   title,

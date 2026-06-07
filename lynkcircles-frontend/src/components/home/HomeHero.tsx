@@ -19,17 +19,6 @@ const greetingKeyForHour = (hour: number): string => {
   return "home.greeting.lateNight";
 };
 
-/**
- * Greeting + role-specific call-to-action above the fold. The whole
- * point: a Client lands here and sees "Post a job", a Worker lands
- * and sees "Browse open jobs". One screen, two products, picked by
- * who's looking.
- *
- * This is the first component fully wired through i18n — every
- * user-facing string is a t(...) lookup. The rest of the app will
- * migrate incrementally; English fallbacks via fallbackLng mean
- * un-migrated strings keep working without churn.
- */
 export const HomeHero = ({ onPostJob }: Props) => {
   const { t } = useTranslation();
   const { data: user } = useAuthUser();
@@ -52,9 +41,6 @@ export const HomeHero = ({ onPostJob }: Props) => {
         borderRadius: 2,
         border: 1,
         borderColor: "transparent",
-        // Brand gradient — sourced from the logo. This is the only
-        // place the gradient leads the surface; everywhere else stays
-        // flat so the gradient anchors the brand without dilution.
         background: (theme) =>
           theme.palette.mode === "dark"
             ? `linear-gradient(135deg, #312e81 0%, #4f46e5 60%, #6366f1 100%)`
@@ -67,8 +53,6 @@ export const HomeHero = ({ onPostJob }: Props) => {
         mb: 3,
       })}
     >
-      {/* Soft radial highlight in the top-right — adds depth so the
-          flat gradient doesn't read as a single block of color. */}
       <Box
         sx={{
           position: "absolute",
@@ -102,9 +86,6 @@ export const HomeHero = ({ onPostJob }: Props) => {
         </Typography>
       </Box>
       <Box sx={{ display: "flex", gap: 1, flexShrink: 0, position: "relative" }}>
-        {/* On the gradient hero, swap the primary button to a high-
-            contrast white-on-brand pill so the CTA still reads as the
-            highest-priority action against an already-colorful surface. */}
         {isClient ? (
           <Button
             variant="contained"

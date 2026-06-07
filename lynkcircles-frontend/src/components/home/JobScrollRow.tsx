@@ -27,13 +27,6 @@ const statusTone = (status: JobStatus): "trust" | "info" | "warning" | "neutral"
   }
 };
 
-/**
- * Compact horizontal-scroll row of job tiles for the Home dashboard.
- * Different from JobPostCard (the full list-view card) — this one is
- * sized for a dashboard preview, sticks to a fixed width so 3-4
- * tiles fit on a typical viewport, and scrolls horizontally on
- * narrow screens.
- */
 export const JobScrollRow = ({ jobs }: Props) => {
   if (!jobs.length) return null;
 
@@ -43,13 +36,8 @@ export const JobScrollRow = ({ jobs }: Props) => {
         display: "flex",
         gap: 1.5,
         overflowX: "auto",
-        // Edge fade so users sense there's more on the right when
-        // content overflows.
         scrollSnapType: "x mandatory",
         pb: 0.5,
-        mx: -0.5,
-        px: 0.5,
-        // Hide scrollbar visually but keep it accessible by keyboard.
         scrollbarWidth: "thin",
         "&::-webkit-scrollbar": { height: 6 },
         "&::-webkit-scrollbar-thumb": {

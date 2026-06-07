@@ -77,8 +77,6 @@ const WorkPage = () => {
   const [reviewOpen, setReviewOpen] = useState(false);
 
   const isOwner = !!job && authUser?._id === job.author._id;
-  // Applicants endpoint requires owner permission server-side; only
-  // fetch it for the owner to avoid spurious 403s on Worker views.
   const { data: applicants } = useJobApplicants(workPostId, isOwner);
 
   if (isLoading || !job) {
@@ -154,9 +152,6 @@ const WorkPage = () => {
 
           {isOwner ? (
             <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
-              {/* Lifecycle-aware primary CTA. The state machine is:
-                  Open → (Hire applicant) → In Progress → (Mark complete)
-                  → Completed → (Leave review) → reviewed=true */}
               {job.status === "In Progress" ? (
                 <Button
                   variant="contained"
@@ -385,11 +380,6 @@ const WorkPage = () => {
         ) : null}
       </Box>
 
-      {/* Hired Worker card — visible to everyone once a hire happens.
-          For the Client, it's the receipt of who they picked. For
-          other Workers viewing the job, it's the signal that the
-          position is filled. For the hired Worker, it's the
-          confirmation pinned at the top. */}
       {hired ? (
         <Box
           sx={(theme) => ({
@@ -552,10 +542,6 @@ const WorkPage = () => {
                     >
                       Message
                     </Button>
-                    {/* Hire button only when the job is still Open. Once
-                        we move to In Progress, this disappears so a
-                        Client can't accidentally rehire a different
-                        applicant mid-job. */}
                     {job.status === "Open" ? (
                       <Button
                         size="small"
