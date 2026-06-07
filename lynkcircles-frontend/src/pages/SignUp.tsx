@@ -86,12 +86,15 @@ const SignUp = () => {
           spacing={0.5}
           sx={{ alignItems: "center", textAlign: "center", mb: 1 }}
         >
-          <Logo />
-          <Typography variant="h3" sx={{ mt: 2 }}>
+          <Logo size={56} />
+          <Typography
+            variant="h5"
+            sx={{ mt: 2.5, fontWeight: 700, letterSpacing: "-0.02em" }}
+          >
             Create your account
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Hire trusted workers or get hired for what you do best.
+            Hire skilled workers or get hired for what you do best.
           </Typography>
         </Stack>
 

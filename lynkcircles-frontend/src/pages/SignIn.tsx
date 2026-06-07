@@ -68,12 +68,15 @@ const SignIn = () => {
           spacing={0.5}
           sx={{ alignItems: "center", textAlign: "center", mb: 1 }}
         >
-          <Logo />
-          <Typography variant="h3" sx={{ mt: 2 }}>
+          <Logo size={56} />
+          <Typography
+            variant="h5"
+            sx={{ mt: 2.5, fontWeight: 700, letterSpacing: "-0.02em" }}
+          >
             Welcome back
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Sign in to continue to your network.
+            Sign in to keep working with people you trust.
           </Typography>
         </Stack>
 

@@ -5,6 +5,7 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 import { NavLink, Link as RouterLink, useResolvedPath, useMatch } from "react-router-dom";
 import { Moon, Sun, Search } from "lucide-react";
 
@@ -107,13 +108,27 @@ export const TopNav = ({ onOpenCommandPalette }: Props) => {
           px: { md: 3, lg: 4 },
         }}
       >
-        <Box
+        <Stack
           component={RouterLink}
           to="/"
+          direction="row"
+          spacing={1.25}
+          alignItems="center"
           sx={{ textDecoration: "none", color: "inherit" }}
         >
-          <Logo />
-        </Box>
+          <Logo size={30} />
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              fontSize: "1.0625rem",
+              display: { md: "none", lg: "block" },
+            }}
+          >
+            LynkCircles
+          </Typography>
+        </Stack>
 
         <Box
           component="button"
