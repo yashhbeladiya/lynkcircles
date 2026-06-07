@@ -40,6 +40,15 @@ them, leave a review with photos when it's done.
   +91 inferred for 10-digit numbers.
 - **Installable PWA.** Manifest + service worker, with cache
   strategies for remote images and the inbox list.
+- **Live map discovery.** Leaflet + OpenStreetMap map overlays worker
+  pins and job pins with custom DivIcon markers. Layer toggle
+  (All / Workers / Jobs), service filter chips, recenter-on-me button.
+- **Semantic match engine.** TF-IDF cosine similarity computed
+  server-side. Workers see ranked jobs; clients see ranked workers.
+  Score bar + matched keyword chips on every card.
+- **Insights dashboard.** Role-aware analytics with Recharts — message
+  volume over 14 days (area chart), rating distribution (bar chart),
+  hire-rate stats for workers; post-by-day + status pie for clients.
 - **Validated boundaries.** Zod schemas on every public POST/PUT
   endpoint so bad payloads return structured 400s, not 500s.
 
@@ -173,9 +182,6 @@ what's *not* there is more useful than pretending it's all done.
 - **Payments / escrow.** The hiring flow stops at "review" — there
   is no money movement. Stripe Connect would be the right shape if
   this ever leaves the prototype.
-- **Map view.** Geo data is captured and used for sorting and
-  distance display, but there's no Leaflet/Mapbox surface. Easy to
-  add — the GeoJSON is already there.
 - **Phone OTP verification.** The verification badge ignores phone
   proof for now. Twilio/MSG91 would fit, but adds infra.
 - **Full i18n migration.** The plumbing is in place (i18next +
