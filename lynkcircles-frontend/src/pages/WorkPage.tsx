@@ -151,7 +151,7 @@ const WorkPage = () => {
           </Box>
 
           {isOwner ? (
-            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
+            <Box sx={{ display: "flex", gap: { xs: 0.5, sm: 0.75 }, flexWrap: "wrap", justifyContent: "flex-end" }}>
               {job.status === "In Progress" ? (
                 <Button
                   variant="contained"

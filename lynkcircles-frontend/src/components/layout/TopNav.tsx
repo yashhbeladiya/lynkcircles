@@ -81,10 +81,6 @@ const NavIconLink = ({ item, badgeCount = 0 }: NavIconLinkProps) => {
   );
 };
 
-/**
- * Desktop / tablet top navigation. Hidden on mobile (<md breakpoint),
- * where the BottomTabBar takes over.
- */
 export const TopNav = ({ onOpenCommandPalette }: Props) => {
   const { mode, toggleMode } = useColorMode();
   const unread = useUnreadNotificationCount();

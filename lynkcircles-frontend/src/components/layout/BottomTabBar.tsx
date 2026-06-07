@@ -65,7 +65,8 @@ const Tab = ({ item, badgeCount = 0 }: TabProps) => {
       </Badge>
       <Typography
         variant="caption"
-        sx={{ fontSize: "0.6875rem", fontWeight: active ? 600 : 500 }}
+        noWrap
+        sx={{ fontSize: "0.625rem", fontWeight: active ? 600 : 500, maxWidth: "100%" }}
       >
         {item.label}
       </Typography>
@@ -73,12 +74,6 @@ const Tab = ({ item, badgeCount = 0 }: TabProps) => {
   );
 };
 
-/**
- * Mobile bottom tab bar. Shows on <md breakpoints only. Picks up to
- * 5 mobile-flagged items from navItems.ts and badges the bell with
- * the unread-notification count so mobile users get the same signal
- * desktop users get from the TopNav.
- */
 export const BottomTabBar = () => {
   const items = NAV_ITEMS.filter((item) => item.mobile).slice(0, 5);
   const unread = useUnreadNotificationCount();

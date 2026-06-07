@@ -116,13 +116,14 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
             {isOwn ? (
               <Button
                 variant="contained"
-                size="medium"
-                startIcon={<Pencil size={16} />}
+                size="small"
+                startIcon={<Pencil size={15} />}
                 onClick={onEdit}
                 sx={{
-                  px: 2.5,
-                  py: 1,
+                  px: { xs: 2, sm: 2.5 },
+                  py: { xs: 0.75, sm: 1 },
                   fontWeight: 600,
+                  fontSize: { xs: "0.8125rem", sm: "0.875rem" },
                   boxShadow: (t) =>
                     t.palette.mode === "dark"
                       ? "0 6px 14px -4px rgba(99,102,241,0.5)"
@@ -137,12 +138,13 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                   component={Link}
                   to={`/messages/${user._id}`}
                   variant="contained"
-                  size="medium"
-                  startIcon={<MessageSquare size={16} />}
+                  size="small"
+                  startIcon={<MessageSquare size={15} />}
                   sx={{
-                    px: 2.5,
-                    py: 1,
+                    px: { xs: 2, sm: 2.5 },
+                    py: { xs: 0.75, sm: 1 },
                     fontWeight: 600,
+                    fontSize: { xs: "0.8125rem", sm: "0.875rem" },
                     boxShadow: (t) =>
                       t.palette.mode === "dark"
                         ? "0 6px 14px -4px rgba(99,102,241,0.5)"
@@ -159,12 +161,13 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                       target="_blank"
                       rel="noreferrer noopener"
                       variant="outlined"
-                      size="medium"
-                      startIcon={<MessageCircle size={16} />}
+                      size="small"
+                      startIcon={<MessageCircle size={15} />}
                       sx={{
-                        px: 2,
-                        py: 1,
+                        px: { xs: 1.5, sm: 2 },
+                        py: { xs: 0.75, sm: 1 },
                         fontWeight: 600,
+                        fontSize: { xs: "0.8125rem", sm: "0.875rem" },
                         borderColor: "#25D366",
                         color: "#25D366",
                         "&:hover": {
@@ -181,17 +184,17 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                   <Button
                     variant={isSaved ? "contained" : "outlined"}
                     color={isSaved ? "success" : "primary"}
-                    size="medium"
+                    size="small"
                     startIcon={
                       isSaved ? (
-                        <BookmarkCheck size={16} />
+                        <BookmarkCheck size={15} />
                       ) : (
-                        <Bookmark size={16} />
+                        <Bookmark size={15} />
                       )
                     }
                     onClick={() => toggleSave.mutate(user._id)}
                     disabled={toggleSave.isPending}
-                    sx={{ px: 2, py: 1, fontWeight: 600 }}
+                    sx={{ px: { xs: 1.5, sm: 2 }, py: { xs: 0.75, sm: 1 }, fontWeight: 600 }}
                   >
                     {isSaved
                       ? t("profile.actions.saved")
