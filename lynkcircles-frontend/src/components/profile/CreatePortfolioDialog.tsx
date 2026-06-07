@@ -245,6 +245,7 @@ export const CreatePortfolioDialog = ({
                     <IconButton
                       size="small"
                       onClick={() => removeImage(i)}
+                      aria-label="Remove image"
                       sx={{
                         position: "absolute",
                         top: 4,

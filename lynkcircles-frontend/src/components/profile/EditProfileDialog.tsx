@@ -194,6 +194,7 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
           <IconButton
             size="small"
             onClick={() => bannerInputRef.current?.click()}
+            aria-label="Change banner image"
             sx={{
               position: "absolute",
               top: 8,
