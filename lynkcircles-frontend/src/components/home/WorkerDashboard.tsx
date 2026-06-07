@@ -12,7 +12,7 @@ export const WorkerDashboard = () => {
   const myApps = useMyApplications();
 
   return (
-    <Box sx={{ display: "grid", gap: 3, mt: 3 }}>
+    <Box sx={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 3, mt: 3 }}>
       <Box>
         <SectionHeader title="Open jobs near you" seeAllHref="/works" />
         {openJobs.isLoading ? (

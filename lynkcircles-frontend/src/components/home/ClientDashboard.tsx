@@ -18,7 +18,7 @@ export const ClientDashboard = ({ onPostJob }: Props) => {
   const myPosts = useMyJobPosts();
 
   return (
-    <Box sx={{ display: "grid", gap: 3, mt: 3 }}>
+    <Box sx={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr)", gap: 3, mt: 3 }}>
       <Box>
         <SectionHeader title="Workers near you" seeAllHref="/map" seeAllLabel="View map" />
         {workers.isLoading ? (
