@@ -28,6 +28,9 @@ import newsRoutes from "./routes/news.route.js";
 import messageRoutes from "./routes/message.route.js";
 import servicesRoutes from "./routes/services.route.js";
 import searchRoutes from "./routes/search.route.js";
+import discoveryRoutes from "./routes/discovery.route.js";
+import matchRoutes from "./routes/match.route.js";
+import insightsRoutes from "./routes/insights.route.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -97,6 +100,9 @@ app.use("/api/v1/workdetails", writeLimiter, workDetailRoutes);
 app.use("/api/v1/messages", writeLimiter, messageRoutes);
 app.use("/api/v1/news", newsRoutes);
 app.use("/api/v1/services", servicesRoutes);
+app.use("/api/v1/discovery", discoveryRoutes);
+app.use("/api/v1/matches", matchRoutes);
+app.use("/api/v1/insights", insightsRoutes);
 
 if (isProd) {
   app.use(express.static(path.join(__dirname, "/lynkcircles-react-app/build")));
