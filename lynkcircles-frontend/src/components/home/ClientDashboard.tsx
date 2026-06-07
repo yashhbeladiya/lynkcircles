@@ -13,26 +13,14 @@ interface Props {
   onPostJob: () => void;
 }
 
-/**
- * Client's marketplace-first Home: who can I hire, what jobs of
- * mine are live, who's applied. Workers grid leads — for a Client
- * the answer to "what am I doing here?" is "finding people," so the
- * page leads with people.
- */
 export const ClientDashboard = ({ onPostJob }: Props) => {
   const workers = useRecommendedUsers();
   const myPosts = useMyJobPosts();
 
   return (
-    <Box sx={{ display: "grid", gap: 3, mb: 3 }}>
+    <Box sx={{ display: "grid", gap: 3, mt: 3 }}>
       <Box>
-        <SectionHeader
-          eyebrow="Hire"
-          title="Workers to consider"
-          description="Verified pros near you, sorted by location and trade overlap. Tap any to view their profile and portfolio."
-          seeAllHref="/network"
-          seeAllLabel="Browse all"
-        />
+        <SectionHeader title="Workers near you" seeAllHref="/map" seeAllLabel="View map" />
         {workers.isLoading ? (
           <WorkerGridSkeleton />
         ) : workers.data && workers.data.length > 0 ? (
@@ -42,9 +30,10 @@ export const ClientDashboard = ({ onPostJob }: Props) => {
               gridTemplateColumns: {
                 xs: "repeat(2, minmax(0, 1fr))",
                 sm: "repeat(3, minmax(0, 1fr))",
-                md: "repeat(4, minmax(0, 1fr))",
+                md: "repeat(3, minmax(0, 1fr))",
+                lg: "repeat(4, minmax(0, 1fr))",
               },
-              gap: 1.5,
+              gap: 1.25,
             }}
           >
             {workers.data.slice(0, 8).map((u) => (
@@ -52,21 +41,12 @@ export const ClientDashboard = ({ onPostJob }: Props) => {
             ))}
           </Box>
         ) : (
-          <EmptyShell
-            icon={Users}
-            title="No Workers to show yet"
-            description="As more pros join LynkCircles, you'll see suggestions here based on your location and the work you post."
-          />
+          <EmptyShell icon={Users} title="No workers near you yet" />
         )}
       </Box>
 
       <Box>
-        <SectionHeader
-          eyebrow="Your jobs"
-          title="Active job posts"
-          description="Tap any tile to review applicants or change status."
-          seeAllHref="/works"
-        />
+        <SectionHeader title="Your job posts" seeAllHref="/works" />
         {myPosts.isLoading ? (
           <JobRowSkeleton />
         ) : myPosts.data && myPosts.data.length > 0 ? (
@@ -75,7 +55,6 @@ export const ClientDashboard = ({ onPostJob }: Props) => {
           <EmptyShell
             icon={Briefcase}
             title="You haven't posted a job yet"
-            description="Post one and Workers in your area can apply. You'll review and hire from one place."
             action={{ label: "Post a job", onClick: onPostJob }}
           />
         )}
@@ -87,24 +66,22 @@ export const ClientDashboard = ({ onPostJob }: Props) => {
 const EmptyShell = ({
   icon,
   title,
-  description,
   action,
 }: {
   icon: typeof Users;
   title: string;
-  description: string;
   action?: { label: string; onClick: () => void };
 }) => (
   <Box
-    sx={(theme) => ({
+    sx={{
       p: 3,
       borderRadius: 2,
       border: 1,
       borderColor: "divider",
-      backgroundColor: theme.palette.background.paper,
-    })}
+      backgroundColor: "background.paper",
+    }}
   >
-    <EmptyState icon={icon} title={title} description={description} action={action} />
+    <EmptyState icon={icon} title={title} action={action} />
   </Box>
 );
 
@@ -115,24 +92,25 @@ const WorkerGridSkeleton = () => (
       gridTemplateColumns: {
         xs: "repeat(2, minmax(0, 1fr))",
         sm: "repeat(3, minmax(0, 1fr))",
-        md: "repeat(4, minmax(0, 1fr))",
+        md: "repeat(3, minmax(0, 1fr))",
+        lg: "repeat(4, minmax(0, 1fr))",
       },
-      gap: 1.5,
+      gap: 1.25,
     }}
   >
     {[0, 1, 2, 3].map((i) => (
       <Box
         key={i}
-        sx={(theme) => ({
+        sx={{
           p: 2,
           borderRadius: 2,
           border: 1,
           borderColor: "divider",
-          backgroundColor: theme.palette.background.paper,
+          backgroundColor: "background.paper",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-        })}
+        }}
       >
         <Skeleton variant="circular" width={56} height={56} />
         <Skeleton width="65%" height={14} sx={{ mt: 1.5 }} />
@@ -147,14 +125,14 @@ const JobRowSkeleton = () => (
     {[0, 1, 2].map((i) => (
       <Box
         key={i}
-        sx={(theme) => ({
+        sx={{
           flex: "0 0 280px",
           p: 1.75,
           borderRadius: 2,
           border: 1,
           borderColor: "divider",
-          backgroundColor: theme.palette.background.paper,
-        })}
+          backgroundColor: "background.paper",
+        }}
       >
         <Skeleton width="90%" height={16} />
         <Skeleton width="70%" height={16} />

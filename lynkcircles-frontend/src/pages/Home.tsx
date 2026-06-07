@@ -1,46 +1,61 @@
 import { useState } from "react";
-import Container from "@mui/material/Container";
+import Box from "@mui/material/Box";
 
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 import { HomeHero } from "@/components/home/HomeHero";
+import { HomeLeftRail } from "@/components/home/HomeLeftRail";
+import { HomeRightRail } from "@/components/home/HomeRightRail";
 import { WorkerDashboard } from "@/components/home/WorkerDashboard";
 import { ClientDashboard } from "@/components/home/ClientDashboard";
 import { CreateJobPostDialog } from "@/components/works/CreateJobPostDialog";
 
-/**
- * Role-aware marketplace Home. Hero + role-specific dashboard. No
- * social feed, no PostComposer — that was a LinkedIn-shaped section
- * that didn't earn its space on a trades-marketplace home. The Post
- * model + endpoints still exist (dormant) in case we revisit as a
- * "showcase" surface, but they're off the UI for now.
- *
- * Worker view  → open jobs (skill+distance ranked) + active applications
- * Client view  → workers to consider + own active job posts
- */
 const Home = () => {
   const { data: user } = useAuthUser();
   const [postJobOpen, setPostJobOpen] = useState(false);
-  const isClient = user?.role === "Client";
+
+  if (!user) return null;
+  const isClient = user.role === "Client";
 
   return (
-    <Container
-      maxWidth="md"
-      sx={{ py: { xs: 2, md: 3 }, px: { xs: 1.5, md: 3 } }}
+    <Box
+      sx={{
+        maxWidth: 1280,
+        mx: "auto",
+        px: { xs: 1.5, sm: 2.5, md: 3 },
+        py: { xs: 2, md: 3 },
+        display: "grid",
+        gap: { xs: 2, md: 2.5 },
+        gridTemplateColumns: {
+          xs: "1fr",
+          md: "minmax(0, 1fr) 320px",
+          lg: "260px minmax(0, 1fr) 320px",
+        },
+        alignItems: "start",
+      }}
     >
-      <HomeHero onPostJob={() => setPostJobOpen(true)} />
+      <Box sx={{ display: { xs: "none", lg: "block" } }}>
+        <HomeLeftRail />
+      </Box>
 
-      {isClient ? (
-        <ClientDashboard onPostJob={() => setPostJobOpen(true)} />
-      ) : (
-        <WorkerDashboard />
-      )}
+      <Box sx={{ minWidth: 0 }}>
+        <HomeHero onPostJob={() => setPostJobOpen(true)} />
+        {isClient ? (
+          <ClientDashboard onPostJob={() => setPostJobOpen(true)} />
+        ) : (
+          <WorkerDashboard />
+        )}
+      </Box>
+
+      <Box sx={{ display: { xs: "none", md: "block" } }}>
+        <HomeRightRail onPostJob={() => setPostJobOpen(true)} />
+      </Box>
 
       <CreateJobPostDialog
         open={postJobOpen}
         onClose={() => setPostJobOpen(false)}
       />
-    </Container>
+    </Box>
   );
 };
 

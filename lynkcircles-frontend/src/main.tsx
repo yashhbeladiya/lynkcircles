@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 
 import "@fontsource-variable/inter";
 import "@fontsource-variable/jetbrains-mono";
+import "leaflet/dist/leaflet.css";
 
 import "./index.css";
 // Side-effect import — initializes i18next before any component
