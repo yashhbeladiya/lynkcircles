@@ -31,21 +31,22 @@ export const JobScrollRow = ({ jobs }: Props) => {
   if (!jobs.length) return null;
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        gap: 1.5,
-        overflowX: "auto",
-        scrollSnapType: "x mandatory",
-        pb: 0.5,
-        scrollbarWidth: "thin",
-        "&::-webkit-scrollbar": { height: 6 },
-        "&::-webkit-scrollbar-thumb": {
-          backgroundColor: "action.hover",
-          borderRadius: 3,
-        },
-      }}
-    >
+    <Box sx={{ overflow: "hidden" }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: 1.5,
+          overflowX: "auto",
+          scrollSnapType: "x mandatory",
+          pb: 1.5,
+          scrollbarWidth: "thin",
+          "&::-webkit-scrollbar": { height: 6 },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "action.hover",
+            borderRadius: 3,
+          },
+        }}
+      >
       {jobs.map((job) => (
         <Box
           key={job._id}
@@ -170,6 +171,7 @@ export const JobScrollRow = ({ jobs }: Props) => {
           </Box>
         </Box>
       ))}
+      </Box>
     </Box>
   );
 };

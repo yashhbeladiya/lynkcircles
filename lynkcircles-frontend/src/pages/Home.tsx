@@ -38,7 +38,7 @@ const Home = () => {
         <HomeLeftRail />
       </Box>
 
-      <Box sx={{ minWidth: 0, overflowX: "hidden" }}>
+      <Box sx={{ minWidth: 0 }}>
         <HomeHero onPostJob={() => setPostJobOpen(true)} />
         {isClient ? (
           <ClientDashboard onPostJob={() => setPostJobOpen(true)} />
