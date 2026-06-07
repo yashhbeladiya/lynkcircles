@@ -6,6 +6,7 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
+import Paper from "@mui/material/Paper";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -71,25 +72,60 @@ const SignUp = () => {
         px: 2,
         py: 4,
         bgcolor: "background.default",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       <Box
+        aria-hidden
         sx={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background: (t) =>
+            t.palette.mode === "dark"
+              ? "radial-gradient(ellipse at 30% 0%, rgba(99,102,241,0.18), transparent 55%), radial-gradient(ellipse at 75% 100%, rgba(67,56,202,0.20), transparent 60%)"
+              : "radial-gradient(ellipse at 30% 0%, rgba(99,102,241,0.18), transparent 55%), radial-gradient(ellipse at 75% 100%, rgba(67,56,202,0.10), transparent 60%)",
+        }}
+      />
+      <Paper
+        elevation={0}
+        sx={{
+          position: "relative",
           width: "100%",
-          maxWidth: 420,
-          display: "flex",
-          flexDirection: "column",
-          gap: 3,
+          maxWidth: 440,
+          p: { xs: 3, sm: 4 },
+          borderRadius: 3,
+          border: 1,
+          borderColor: "divider",
+          backdropFilter: "blur(8px)",
+          backgroundColor: (t) =>
+            t.palette.mode === "dark"
+              ? "rgba(24, 24, 27, 0.85)"
+              : "rgba(255, 255, 255, 0.92)",
         }}
       >
-        <Stack
-          spacing={0.5}
-          sx={{ alignItems: "center", textAlign: "center", mb: 1 }}
-        >
-          <Logo size={56} />
+        <Stack spacing={1} sx={{ alignItems: "center", textAlign: "center", mb: 3 }}>
+          <Box
+            sx={{
+              position: "relative",
+              display: "inline-flex",
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                inset: -8,
+                borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(99,102,241,0.35), transparent 70%)",
+                filter: "blur(12px)",
+                zIndex: -1,
+              },
+            }}
+          >
+            <Logo size={56} />
+          </Box>
           <Typography
             variant="h5"
-            sx={{ mt: 2.5, fontWeight: 700, letterSpacing: "-0.02em" }}
+            sx={{ mt: 2, fontWeight: 700, letterSpacing: "-0.02em" }}
           >
             Create your account
           </Typography>
@@ -103,7 +139,6 @@ const SignUp = () => {
             <Stack direction="row" spacing={1.5}>
               <TextField
                 label="First name"
-                size="medium"
                 fullWidth
                 required
                 value={form.firstName}
@@ -112,7 +147,6 @@ const SignUp = () => {
               />
               <TextField
                 label="Last name"
-                size="medium"
                 fullWidth
                 required
                 value={form.lastName}
@@ -122,7 +156,6 @@ const SignUp = () => {
             </Stack>
             <TextField
               label="Username"
-              size="medium"
               fullWidth
               required
               value={form.username}
@@ -133,7 +166,6 @@ const SignUp = () => {
             <TextField
               label="Email"
               type="email"
-              size="medium"
               fullWidth
               required
               value={form.email}
@@ -143,7 +175,6 @@ const SignUp = () => {
             <TextField
               label="Password"
               type="password"
-              size="medium"
               fullWidth
               required
               value={form.password}
@@ -180,7 +211,7 @@ const SignUp = () => {
               variant="contained"
               size="large"
               disabled={signupMutation.isPending}
-              sx={{ mt: 1 }}
+              sx={{ mt: 1, py: 1.25, fontWeight: 600 }}
             >
               {signupMutation.isPending ? "Creating account…" : "Create account"}
             </Button>
@@ -190,14 +221,14 @@ const SignUp = () => {
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ textAlign: "center" }}
+          sx={{ textAlign: "center", mt: 3 }}
         >
           Already on LynkCircles?{" "}
-          <Link component={RouterLink} to="/signin" underline="hover">
+          <Link component={RouterLink} to="/signin" underline="hover" fontWeight={500}>
             Sign in
           </Link>
         </Typography>
-      </Box>
+      </Paper>
     </Box>
   );
 };
