@@ -25,7 +25,8 @@
   "scripts": {
     "dev": "nodemon lynkcircles-backend/index.js",
     "start": "node lynkcircles-backend/index.js",
-    "build": "npm install && npm install --prefix lynkcircles-react-app && npm run build --prefix lynkcircles-react-app"
+    "seed": "node lynkcircles-backend/seeds/seed.js",
+    "build": "npm install && npm install --prefix lynkcircles-frontend && npm run build --prefix lynkcircles-frontend"
   },
   "repository": {
     "type": "git",
