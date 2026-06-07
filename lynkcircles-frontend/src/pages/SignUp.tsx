@@ -224,7 +224,7 @@ const SignUp = () => {
           sx={{ textAlign: "center", mt: 3 }}
         >
           Already on LynkCircles?{" "}
-          <Link component={RouterLink} to="/signin" underline="hover" fontWeight={500}>
+          <Link component={RouterLink} to="/signin" underline="hover" sx={{ fontWeight: 500 }}>
             Sign in
           </Link>
         </Typography>

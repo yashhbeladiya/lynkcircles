@@ -206,7 +206,6 @@ export const AddPortfolioReviewDialog = ({
                         color: "#fff",
                         p: 0.25,
                       }}
-                      aria-label="Remove photo"
                     >
                       <X size={12} />
                     </IconButton>

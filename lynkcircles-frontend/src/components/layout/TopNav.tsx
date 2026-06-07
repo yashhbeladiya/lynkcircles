@@ -108,13 +108,17 @@ export const TopNav = ({ onOpenCommandPalette }: Props) => {
           px: { md: 3, lg: 4 },
         }}
       >
-        <Stack
+        <Box
           component={RouterLink}
           to="/"
-          direction="row"
-          spacing={1.25}
-          alignItems="center"
-          sx={{ textDecoration: "none", color: "inherit" }}
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 1.25,
+            textDecoration: "none",
+            color: "inherit",
+          }}
         >
           <Logo size={30} />
           <Typography
@@ -128,7 +132,7 @@ export const TopNav = ({ onOpenCommandPalette }: Props) => {
           >
             LynkCircles
           </Typography>
-        </Stack>
+        </Box>
 
         <Box
           component="button"

@@ -203,7 +203,6 @@ export const EditProfileDialog = ({ user, open, onClose }: Props) => {
               color: "#fff",
               "&:hover": { bgcolor: "rgba(0, 0, 0, 0.7)" },
             }}
-            aria-label="Change banner"
           >
             <Camera size={14} />
           </IconButton>
