@@ -39,6 +39,7 @@ export const JobScrollRow = ({ jobs }: Props) => {
           overflowX: "auto",
           scrollSnapType: "x mandatory",
           pb: 1.5,
+          pt: 0.125,
           scrollbarWidth: "thin",
           "&::-webkit-scrollbar": { height: 6 },
           "&::-webkit-scrollbar-thumb": {

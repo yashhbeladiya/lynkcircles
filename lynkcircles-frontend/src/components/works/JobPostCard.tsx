@@ -33,12 +33,6 @@ const TYPE_LABEL: Record<NonNullable<JobPost["jobType"]>, string> = {
   employment: "Hiring",
 };
 
-/**
- * Marketplace job-board tile. Built for scanability: headline + budget
- * + location + how many people have already applied are all visible
- * above the fold so a Worker can decide "is this worth opening?" in
- * one glance. Whole card links to /works/:id detail.
- */
 export const JobPostCard = ({ job }: Props) => {
   const applicantCount = job.applicants?.length ?? 0;
 

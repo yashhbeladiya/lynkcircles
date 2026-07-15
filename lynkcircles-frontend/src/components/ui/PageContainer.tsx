@@ -12,16 +12,10 @@ const WIDTHS: Record<MaxWidth, number> = {
 
 interface Props {
   children: ReactNode;
-  /** Default 'lg' which is comfortable for a 2-3 column layout. */
   maxWidth?: MaxWidth;
-  /** Disable horizontal padding on small screens (rare; default false). */
   disablePadding?: boolean;
 }
 
-/**
- * Consistent page wrapper. Caps width, applies responsive horizontal
- * padding, and vertical breathing room so every page lines up.
- */
 export const PageContainer = ({
   children,
   maxWidth = "lg",

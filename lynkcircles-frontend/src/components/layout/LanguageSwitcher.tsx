@@ -6,14 +6,6 @@ import InputAdornment from "@mui/material/InputAdornment";
 
 import { SUPPORTED_LOCALES, type AppLocale } from "@/lib/i18n";
 
-/**
- * Locale picker. Compact, sits in the user menu or top nav. Writes
- * to localStorage via i18next-browser-languagedetector's cache, so
- * the choice survives reloads.
- *
- * No "auto" option — auto-detection happens before this picker
- * shows. Explicit picks always win once the user makes one.
- */
 export const LanguageSwitcher = () => {
   const { t, i18n } = useTranslation();
   const current = (i18n.resolvedLanguage ?? "en") as AppLocale;

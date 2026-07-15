@@ -10,11 +10,6 @@ export interface SearchResults {
   services: Array<{ key: string; label: string }>;
 }
 
-/**
- * Debounce a value. Pulled inline because we need it exactly once
- * and a dedicated package felt like overkill — 250ms is enough to
- * smooth out typing without making the dropdown feel sluggish.
- */
 const useDebounced = <T,>(value: T, delay = 250): T => {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -24,10 +19,6 @@ const useDebounced = <T,>(value: T, delay = 250): T => {
   return debounced;
 };
 
-/**
- * Search across Workers and open Jobs. Skips the network call below
- * 2 characters — saves the request and the empty-state flash.
- */
 export const useSearch = (query: string) => {
   const debounced = useDebounced(query.trim(), 250);
   const enabled = debounced.length >= 2;

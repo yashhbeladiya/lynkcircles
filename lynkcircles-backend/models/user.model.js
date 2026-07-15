@@ -31,13 +31,7 @@ const userSchema = new mongoose.Schema(
       zipCode: String,
     },
     bio: { type: String, default: "I am user of LynkCircles", required: false },
-    connections: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     savedWorkers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    followingClients: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    communityJoined: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Community" },
-    ],
     status: {
       type: String,
       enum: ["active", "inactive", "banned"],

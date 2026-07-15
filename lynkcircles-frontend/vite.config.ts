@@ -4,6 +4,9 @@ import { VitePWA } from "vite-plugin-pwa";
 import path from "node:path";
 
 export default defineConfig({
+  optimizeDeps: {
+  include: ["recharts"],
+  },
   plugins: [
     react(),
     VitePWA({

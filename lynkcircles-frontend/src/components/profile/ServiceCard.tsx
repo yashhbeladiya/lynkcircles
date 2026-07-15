@@ -32,6 +32,13 @@ export const ServiceCard = ({ service, canManage, onDelete }: Props) => {
         display: "flex",
         flexDirection: "column",
         gap: 1.25,
+        transition: "border-color 150ms ease, box-shadow 150ms ease",
+        "&:hover": {
+          borderColor: "primary.main",
+          boxShadow: theme.palette.mode === "dark"
+            ? "0 4px 16px -4px rgba(99,102,241,0.3)"
+            : "0 4px 16px -4px rgba(67,56,202,0.15)",
+        },
       })}
     >
       <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}>
@@ -99,25 +106,15 @@ export const ServiceCard = ({ service, canManage, onDelete }: Props) => {
             display: "flex",
             alignItems: "baseline",
             gap: 0.5,
-            pt: 0.5,
+            pt: 0.75,
             mt: "auto",
             borderTop: 1,
             borderColor: "divider",
           }}
         >
           <Typography
-            variant="overline"
-            sx={{
-              color: "text.tertiary",
-              fontSize: "0.625rem",
-              letterSpacing: "0.06em",
-            }}
-          >
-            from
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 600, fontSize: "0.9375rem" }}
+            variant="body1"
+            sx={{ fontWeight: 800, fontSize: "1.0625rem", color: "primary.main", letterSpacing: "-0.01em" }}
           >
             {formatCurrency(service.hourlyRate, service.currency ?? "INR")}
           </Typography>

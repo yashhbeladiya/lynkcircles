@@ -2,11 +2,6 @@ import Box from "@mui/material/Box";
 import { MessagesSquare } from "lucide-react";
 import { EmptyState } from "@/components/ui";
 
-/**
- * Right-pane content when no conversation is selected (URL is /messages,
- * no :peerId). Rendered as the index route's element, so it only shows
- * up when no chat is active.
- */
 export const EmptyChatPane = () => (
   <Box
     sx={{

@@ -25,11 +25,6 @@ const reviewSummary = (entry: JobPortfolio) => {
   return { avg, count };
 };
 
-/**
- * Square-ish portfolio tile. Image carousel up top (arrows on hover,
- * dot indicators along the bottom), text body below. Whole card is
- * clickable to open the detail dialog.
- */
 export const PortfolioCard = ({ entry, canManage, onOpen, onDelete }: Props) => {
   const [index, setIndex] = useState(0);
   const images = entry.images ?? [];

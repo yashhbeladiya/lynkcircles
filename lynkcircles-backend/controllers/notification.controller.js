@@ -4,14 +4,11 @@ export const getUserNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find({ recipient: req.user._id })
       .sort({ createdAt: -1 })
-      .populate("relatedUser", "firstName lastName username profilePicture")
-      .populate("relatedPost", "content image");
+      .populate("relatedUser", "firstName lastName username profilePicture");
 
-      // filter out notifications that are not that is user's own
-    const filteredNotifications = notifications.filter( notification => {
-      return notification.relatedUser._id.toString() !== req.user._id.toString();
-    }
-    );
+    const filteredNotifications = notifications.filter((notification) => {
+      return notification.relatedUser?._id.toString() !== req.user._id.toString();
+    });
 
     res.status(200).json(filteredNotifications);
   } catch (error) {
@@ -48,7 +45,7 @@ export const markNotificationAsRead = async (req, res) => {
 
 export const deleteNotification = async (req, res) => {
   try {
-    await Notification.findByIdAndDelete({
+    await Notification.findOneAndDelete({
       _id: req.params.id,
       recipient: req.user._id,
     });

@@ -12,10 +12,6 @@ interface LocationState {
   from?: string;
 }
 
-/**
- * Inverse of RequireAuth. Wraps signin/signup so a logged-in user
- * who lands there bounces back to wherever they were headed (or home).
- */
 export const RedirectIfAuth = ({ children }: Props) => {
   const { data: user, isLoading } = useAuthUser();
   const location = useLocation();

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Box from "@mui/material/Box";
@@ -14,6 +15,7 @@ import {
   MessageSquare,
   Pencil,
   ShieldCheck,
+  Star,
 } from "lucide-react";
 
 import { UserAvatar } from "@/components/ui";
@@ -21,6 +23,7 @@ import {
   useIsSaved,
   useToggleSaveWorker,
 } from "@/hooks/useSavedWorkers";
+import { useUserPortfolio, useWorkDetails } from "@/hooks/useWorkDetails";
 import { buildWhatsappLink } from "@/lib/contactLinks";
 import type { UserProfile } from "@/types/user";
 
@@ -41,8 +44,24 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
   const isSaved = useIsSaved(user._id);
   const toggleSave = useToggleSaveWorker();
 
+  const isWorker = user.role === "Worker";
+
+  const { data: portfolio } = useUserPortfolio(isWorker ? user.username : undefined);
+  const { data: services } = useWorkDetails(isWorker ? user.username : undefined);
+
+  const { reviewCount, avgRating } = useMemo(() => {
+    const allReviews = portfolio?.flatMap((e) => e.reviews ?? []) ?? [];
+    const count = allReviews.length;
+    const avg = count > 0
+      ? allReviews.reduce((s, r) => s + (r.rating ?? 0), 0) / count
+      : 0;
+    return { reviewCount: count, avgRating: avg };
+  }, [portfolio]);
+
+  const serviceCount = services?.length ?? 0;
+
   const location = formatLocation(user.location);
-  const showSave = user.role === "Worker";
+  const showSave = isWorker;
   const waLink =
     user.phonePublic && user.phone
       ? buildWhatsappLink(
@@ -119,16 +138,22 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                 size="small"
                 startIcon={<Pencil size={15} />}
                 onClick={onEdit}
-                sx={{
+                sx={(theme) => ({
                   px: { xs: 2, sm: 2.5 },
                   py: { xs: 0.75, sm: 1 },
                   fontWeight: 600,
                   fontSize: { xs: "0.8125rem", sm: "0.875rem" },
-                  boxShadow: (t) =>
-                    t.palette.mode === "dark"
-                      ? "0 6px 14px -4px rgba(99,102,241,0.5)"
-                      : "0 6px 14px -4px rgba(67,56,202,0.35)",
-                }}
+                  boxShadow: theme.palette.mode === "dark"
+                    ? "0 6px 14px -4px rgba(99,102,241,0.5)"
+                    : "0 6px 14px -4px rgba(67,56,202,0.35)",
+                  transition: "transform 150ms ease, box-shadow 150ms ease",
+                  "&:hover": {
+                    transform: "translateY(-1px)",
+                    boxShadow: theme.palette.mode === "dark"
+                      ? "0 10px 20px -6px rgba(99,102,241,0.55)"
+                      : "0 10px 20px -6px rgba(67,56,202,0.4)",
+                  },
+                })}
               >
                 {t("profile.actions.editProfile")}
               </Button>
@@ -140,16 +165,22 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                   variant="contained"
                   size="small"
                   startIcon={<MessageSquare size={15} />}
-                  sx={{
+                  sx={(theme) => ({
                     px: { xs: 2, sm: 2.5 },
                     py: { xs: 0.75, sm: 1 },
                     fontWeight: 600,
                     fontSize: { xs: "0.8125rem", sm: "0.875rem" },
-                    boxShadow: (t) =>
-                      t.palette.mode === "dark"
-                        ? "0 6px 14px -4px rgba(99,102,241,0.5)"
-                        : "0 6px 14px -4px rgba(67,56,202,0.35)",
-                  }}
+                    boxShadow: theme.palette.mode === "dark"
+                      ? "0 6px 14px -4px rgba(99,102,241,0.5)"
+                      : "0 6px 14px -4px rgba(67,56,202,0.35)",
+                    transition: "transform 150ms ease, box-shadow 150ms ease",
+                    "&:hover": {
+                      transform: "translateY(-1px)",
+                      boxShadow: theme.palette.mode === "dark"
+                        ? "0 10px 20px -6px rgba(99,102,241,0.55)"
+                        : "0 10px 20px -6px rgba(67,56,202,0.4)",
+                    },
+                  })}
                 >
                   {t("profile.actions.message")}
                 </Button>
@@ -170,7 +201,10 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                         fontSize: { xs: "0.8125rem", sm: "0.875rem" },
                         borderColor: "#25D366",
                         color: "#25D366",
+                        transition: "transform 150ms ease, box-shadow 150ms ease, border-color 120ms ease, background-color 120ms ease",
                         "&:hover": {
+                          transform: "translateY(-1px)",
+                          boxShadow: "0 8px 16px -6px rgba(37,211,102,0.35)",
                           borderColor: "#1ebd5a",
                           backgroundColor: "rgba(37, 211, 102, 0.08)",
                         },
@@ -194,7 +228,16 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
                     }
                     onClick={() => toggleSave.mutate(user._id)}
                     disabled={toggleSave.isPending}
-                    sx={{ px: { xs: 1.5, sm: 2 }, py: { xs: 0.75, sm: 1 }, fontWeight: 600 }}
+                    sx={{
+                      px: { xs: 1.5, sm: 2 },
+                      py: { xs: 0.75, sm: 1 },
+                      fontWeight: 600,
+                      transition: "transform 150ms ease, box-shadow 150ms ease",
+                      "&:hover": {
+                        transform: "translateY(-1px)",
+                        boxShadow: "0 6px 14px -4px rgba(16,185,129,0.35)",
+                      },
+                    }}
                   >
                     {isSaved
                       ? t("profile.actions.saved")
@@ -266,6 +309,49 @@ export const ProfileHeader = ({ user, isOwn, onEdit }: Props) => {
               />
             ) : null}
           </Box>
+
+          {isWorker && (avgRating > 0 || serviceCount > 0) ? (
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: { xs: 2.5, sm: 3.5 },
+                mt: 2,
+                pt: 2,
+                borderTop: 1,
+                borderColor: "divider",
+              }}
+            >
+              {avgRating > 0 ? (
+                <Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <Star
+                      size={14}
+                      fill="currentColor"
+                      style={{ color: "var(--mui-palette-warning-main, #f59e0b)" }}
+                      aria-hidden
+                    />
+                    <Typography variant="body2" sx={{ fontWeight: 700, fontSize: "1rem", lineHeight: 1.2 }}>
+                      {avgRating.toFixed(1)}
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: "text.secondary", fontSize: "0.6875rem" }}>
+                    {reviewCount} review{reviewCount !== 1 ? "s" : ""}
+                  </Typography>
+                </Box>
+              ) : null}
+              {serviceCount > 0 ? (
+                <Box>
+                  <Typography variant="body2" sx={{ fontWeight: 700, fontSize: "1rem", lineHeight: 1.2 }}>
+                    {serviceCount}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: "text.secondary", fontSize: "0.6875rem" }}>
+                    service{serviceCount !== 1 ? "s" : ""}
+                  </Typography>
+                </Box>
+              ) : null}
+            </Box>
+          ) : null}
         </Box>
       </Box>
     </Box>

@@ -33,12 +33,6 @@ const readAsDataUri = (file: File): Promise<string> =>
     r.readAsDataURL(file);
   });
 
-/**
- * Modal for a Worker to add a completed-job entry to their portfolio.
- * Bound to a specific service (the dropdown limits to the services the
- * Worker actually offers — there's no point listing a portfolio entry
- * against a service you don't have).
- */
 export const CreatePortfolioDialog = ({
   username,
   services,

@@ -23,8 +23,6 @@ interface Props {
 
 interface NavIconLinkProps {
   item: NavItem;
-  /** Count to badge the icon with — only renders when > 0. Used for
-   *  the Notifications bell so unread state is visible in the chrome. */
   badgeCount?: number;
 }
 

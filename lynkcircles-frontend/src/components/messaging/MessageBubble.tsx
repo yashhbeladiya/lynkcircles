@@ -7,10 +7,7 @@ import type { Message } from "@/types/message";
 
 interface Props {
   message: Message;
-  /** True if the current user is the sender of this message. */
   mine: boolean;
-  /** Hide the timestamp + receipt row if true (used when the next bubble
-   *  is from the same sender within a short time window). */
   compact?: boolean;
 }
 
@@ -39,11 +36,6 @@ const StatusIcon = ({ status }: { status?: Message["status"] }) => {
   return null;
 };
 
-/**
- * Single message bubble. Right-aligned + tinted accent for outbound,
- * left-aligned + neutral surface for inbound. Attachments render above
- * the text content; images inline, other files as a small file row.
- */
 export const MessageBubble = ({ message, mine, compact = false }: Props) => {
   const hasImage = message.fileType === "image" && message.fileUrl;
   const hasOtherFile =

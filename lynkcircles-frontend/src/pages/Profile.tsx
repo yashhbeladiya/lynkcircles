@@ -14,7 +14,6 @@ import { AboutSection } from "@/components/profile/AboutSection";
 import { ServicesSection } from "@/components/profile/ServicesSection";
 import { PortfolioSection } from "@/components/profile/PortfolioSection";
 import { ReviewsSection } from "@/components/profile/ReviewsSection";
-import { ActivitySection } from "@/components/profile/ActivitySection";
 import { EditProfileDialog } from "@/components/profile/EditProfileDialog";
 import { VerificationCard } from "@/components/profile/VerificationCard";
 
@@ -69,7 +68,6 @@ const Profile = () => {
           <ReviewsSection username={profile.username} isOwn={isOwn} />
         </>
       ) : null}
-      <ActivitySection username={profile.username} isOwn={isOwn} />
       {isOwn ? (
         <EditProfileDialog
           user={profile}

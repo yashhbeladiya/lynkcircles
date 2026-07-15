@@ -4,6 +4,7 @@ import Container from "@mui/material/Container";
 import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
 import { BellOff, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "@/components/ui";
 import {
@@ -15,6 +16,7 @@ import {
 import { NotificationItem } from "@/components/notifications/NotificationItem";
 
 const Notifications = () => {
+  const { t } = useTranslation();
   const { data, isLoading } = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
@@ -39,10 +41,10 @@ const Notifications = () => {
             variant="h4"
             sx={{ fontWeight: 600, letterSpacing: "-0.02em" }}
           >
-            Notifications
+            {t("notifications.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            New applicants, messages, reviews, and signals from your network.
+            {t("notifications.subtitle")}
           </Typography>
         </Box>
         {unreadCount > 0 ? (
@@ -52,7 +54,7 @@ const Notifications = () => {
             onClick={() => markAllRead.mutate()}
             disabled={markAllRead.isPending}
           >
-            Mark all as read
+            {t("notifications.markAllRead")}
           </Button>
         ) : null}
       </Box>
@@ -71,8 +73,8 @@ const Notifications = () => {
         >
           <EmptyState
             icon={BellOff}
-            title="You're all caught up"
-            description="When someone applies to your job, sends you a message, leaves a review, or accepts your connection — it'll show up here."
+            title={t("notifications.empty.title")}
+            description={t("notifications.empty.description")}
           />
         </Box>
       ) : (

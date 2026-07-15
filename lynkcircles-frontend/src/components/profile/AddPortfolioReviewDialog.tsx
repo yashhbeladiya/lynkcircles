@@ -34,13 +34,6 @@ const readAsDataUri = (file: File): Promise<string> =>
     r.readAsDataURL(file);
   });
 
-/**
- * Review-with-photos modal. Photos are the trust mechanic — clients
- * can document what they actually got, which is what makes a
- * marketplace review meaningfully different from a social-network
- * recommendation. Capped at 3 images per review to keep the upload
- * payload sane.
- */
 export const AddPortfolioReviewDialog = ({
   username,
   portfolioId,

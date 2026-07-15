@@ -11,7 +11,6 @@ import { formatDistanceToNowStrict } from "date-fns";
 
 import { UserAvatar, EmptyState } from "@/components/ui";
 import { useConversations } from "@/hooks/useConversations";
-import { useConnections } from "@/hooks/useConnections";
 import { useOnlineUsers } from "@/hooks/useOnlineUsers";
 import { useAuthUser } from "@/hooks/useAuthUser";
 import type { Conversation } from "@/types/message";
@@ -39,18 +38,12 @@ const previewOf = (conv: Conversation, selfId: string): string => {
   return prefix + "Message";
 };
 
-/**
- * Left rail listing existing conversations and connections you can start
- * a new chat with. Filterable by name in the local search box. Clicking
- * a row navigates to /messages/:peerId; the chat pane reads the param.
- */
 export const ConversationList = () => {
   const { peerId } = useParams<{ peerId: string }>();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const { data: user } = useAuthUser();
   const { data: conversations, isLoading } = useConversations();
-  const { data: connections } = useConnections();
   const online = useOnlineUsers();
 
   const rows = useMemo<Row[]>(() => {
@@ -67,24 +60,14 @@ export const ConversationList = () => {
       });
     }
 
-    const seen = new Set(fromConv.map((r) => r.peer._id));
-    const fromConns: Row[] = (connections ?? [])
-      .filter((c) => !seen.has(c._id))
-      .map((c) => ({
-        peer: c,
-        lastMessage: "Say hello",
-        online: online.has(c._id),
-      }));
-
-    const all = [...fromConv, ...fromConns];
-    if (!query.trim()) return all;
+    if (!query.trim()) return fromConv;
     const q = query.trim().toLowerCase();
-    return all.filter((r) =>
+    return fromConv.filter((r) =>
       `${r.peer.firstName} ${r.peer.lastName} ${r.peer.username}`
         .toLowerCase()
         .includes(q)
     );
-  }, [conversations, connections, online, user, query]);
+  }, [conversations, online, user, query]);
 
   return (
     <Box

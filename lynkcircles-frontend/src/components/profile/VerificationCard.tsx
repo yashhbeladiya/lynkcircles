@@ -11,19 +11,9 @@ interface Row {
   have: number;
   need: number;
   met: boolean;
-  /** Display "have/need" or "have ≥ need" depending on the metric. */
   display: string;
 }
 
-/**
- * Verification progress card. Visible only on the Worker's own
- * profile — clients hire on verified status, so the Worker needs an
- * obvious path to earn it. The criteria are objective and shown
- * with current counts, so progress is legible at a glance.
- *
- * Hidden once verified (the ShieldCheck on the header already says
- * "you're done").
- */
 export const VerificationCard = ({ enabled = true }: { enabled?: boolean }) => {
   const { data, isLoading } = useMyVerification(enabled);
 

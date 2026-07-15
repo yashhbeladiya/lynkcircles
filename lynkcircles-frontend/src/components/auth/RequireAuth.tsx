@@ -8,12 +8,6 @@ interface Props {
   children: ReactNode;
 }
 
-/**
- * Wraps protected routes. While auth status is loading, renders a
- * centered spinner instead of flashing the page or bouncing to /signin
- * (which would create a redirect loop on slow networks). On 401 we
- * redirect to /signin and remember where the user was trying to go.
- */
 export const RequireAuth = ({ children }: Props) => {
   const { data: user, isLoading, isError } = useAuthUser();
   const location = useLocation();

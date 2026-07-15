@@ -7,15 +7,9 @@ const bounce = keyframes`
 `;
 
 interface Props {
-  /** Optional name to prefix ("Anita is typing"). When omitted, only dots render. */
   name?: string;
 }
 
-/**
- * Three-dot typing indicator. Lives in the chat pane just above the
- * composer when the peer is typing. Uses bottom-margin on its own row
- * (no absolute positioning) so the message list naturally shifts up.
- */
 export const TypingIndicator = ({ name }: Props) => (
   <Box
     role="status"

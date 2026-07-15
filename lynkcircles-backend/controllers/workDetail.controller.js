@@ -139,11 +139,6 @@ export const getJobPortfolioForService = async (req, res) => {
     }
 }
 
-/**
- * Every completed job a Worker has logged, across all their services.
- * Single round-trip (vs N+1 if the FE fetched per-service). Sorted
- * newest-first so the most recent work leads the gallery.
- */
 export const getPortfolioByUsername = async (req, res) => {
     try {
         const user = await User.findOne({ username: req.params.username }).select("_id");
@@ -163,12 +158,6 @@ export const getPortfolioByUsername = async (req, res) => {
     }
 };
 
-/**
- * Add a review to a specific completed job. Anyone signed in can leave
- * one for now — tightening to "only the client whose username matches"
- * is a Phase 4 hardening step. Prevents the same reviewer from leaving
- * two reviews on the same job (use update if they want to change it).
- */
 export const addPortfolioReview = async (req, res) => {
     try {
         const portfolio = await JobPortfolio.findById(req.params.id);
@@ -209,12 +198,6 @@ export const addPortfolioReview = async (req, res) => {
     }
 };
 
-/**
- * Create a portfolio entry. Image/video inputs are accepted as either
- * raw URLs or base64 data URIs — anything that isn't already a Cloudinary
- * URL gets uploaded via the buffer/data-uri path. Uploads happen in
- * parallel so a 5-image entry doesn't serialize 5 round-trips.
- */
 export const createJobPortfolio = async (req, res) => {
     try {
         const {
@@ -437,7 +420,5 @@ export const getReviewById = async (req, res) => {
     }
 }
 
-
         
-
 

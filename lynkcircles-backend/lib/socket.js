@@ -99,14 +99,14 @@ const initializeSocket = (server) => {
   // managed by socket.io itself and auto-clean on disconnect, so we
   // avoid the stale-socket-id bugs of a manual Map.
   const emitToUser = (userIdStr, event, payload) => {
-    log(`emit ${event} -> user:${userIdStr}`);
+    // log(`emit ${event} -> user:${userIdStr}`);
     io.to(`user:${userIdStr}`).emit(event, payload);
   };
 
   io.on("connection", (socket) => {
     const userId = socket.userIdStr;
-    log("CONNECTED", socket.id, "user:", userId,
-      `${socket.user.firstName} ${socket.user.lastName}`);
+    // log("CONNECTED", socket.id, "user:", userId,
+    //   `${socket.user.firstName} ${socket.user.lastName}`);
 
     // Join the per-user room so we can emit to all this user's tabs
     // with one call to io.to(roomName).
@@ -121,8 +121,8 @@ const initializeSocket = (server) => {
     socket.on("privateMessage", async (data, ack) => {
       try {
         const { recipientId, content, fileUrl, fileType, tempId } = data || {};
-        log("RX privateMessage from", userId, "to", recipientId,
-          "content:", content?.slice(0, 40), "tempId:", tempId);
+        // log("RX privateMessage from", userId, "to", recipientId,
+        //   "content:", content?.slice(0, 40), "tempId:", tempId);
 
         if (!recipientId || (!content?.trim() && !fileUrl)) {
           const err = { error: "recipientId and content (or fileUrl) required" };
@@ -200,7 +200,7 @@ const initializeSocket = (server) => {
     });
 
     socket.on("disconnect", (reason) => {
-      log("DISCONNECTED", socket.id, "user:", userId, "reason:", reason);
+      // log("DISCONNECTED", socket.id, "user:", userId, "reason:", reason);
 
       // socket.io has already removed this socket from the user:<id>
       // room by the time disconnect fires. Check if any sockets remain

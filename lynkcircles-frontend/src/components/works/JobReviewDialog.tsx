@@ -35,17 +35,6 @@ const readAsDataUri = (file: File): Promise<string> =>
     r.readAsDataURL(file);
   });
 
-/**
- * Post-completion review modal. The trust loop closer — when a Client
- * marks a job complete, this is what they submit. Photos are
- * encouraged (not required) because proof photos are the difference
- * between a service-marketplace review and a social-media review.
- *
- * On submit, the backend creates a JobPortfolio entry on the hired
- * Worker's profile AND embeds the review in it. So the review lives
- * on the Worker's profile permanently, with the same shape as any
- * other portfolio review.
- */
 export const JobReviewDialog = ({
   jobId,
   jobTitle,

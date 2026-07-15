@@ -33,13 +33,6 @@ const readAsDataUri = (file: File): Promise<string> =>
     r.readAsDataURL(file);
   });
 
-/**
- * Profile editor modal. Sends only the fields the user actually changed
- * — empty strings/unmodified fields are omitted so the server's allow-
- * list update logic doesn't unintentionally clear them. Image fields
- * are sent as base64 data URIs (matches the existing backend contract
- * which forwards them to Cloudinary).
- */
 type Coords = { lat: number; lng: number } | null;
 
 const initialCoords = (user: UserProfile): Coords => {

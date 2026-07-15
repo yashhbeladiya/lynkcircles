@@ -21,18 +21,8 @@ interface Props {
   isOwn: boolean;
 }
 
-/**
- * Gallery of every job this Worker has completed. Click any tile to
- * open a detail view with full description, every photo, and the
- * client reviews (with proof images). Owner can add new entries
- * inline; reviews are added from the detail view to keep the section
- * header uncluttered.
- */
 export const PortfolioSection = ({ username, isOwn }: Props) => {
   const { data: portfolio, isLoading } = useUserPortfolio(username);
-  // Need services to populate the "service" dropdown in the create
-  // dialog. Same query is already cached by ServicesSection — react-
-  // query dedupes, so this is cheap.
   const { data: services } = useWorkDetails(username);
   const deletePortfolio = useDeletePortfolio(username);
   const [createOpen, setCreateOpen] = useState(false);
@@ -45,12 +35,14 @@ export const PortfolioSection = ({ username, isOwn }: Props) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 1,
-          px: 0.5,
+          pb: 1.25,
+          mb: 1.75,
+          borderBottom: 1,
+          borderColor: "divider",
         }}
       >
-        <Typography variant="overline" sx={{ color: "text.secondary" }}>
-          Portfolio · completed work
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: "-0.01em" }}>
+          Portfolio
         </Typography>
         {isOwn && services && services.length > 0 ? (
           <Button

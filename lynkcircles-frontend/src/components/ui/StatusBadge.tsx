@@ -18,11 +18,6 @@ const toneToken = (tone: Tone): "success" | "primary" | "warning" | "neutral" =>
   return "neutral";
 };
 
-/**
- * Inline status pill — used for "Verified", "New", "Featured", "Hot",
- * etc. Tinted background via CSS color-mix so the chip stays readable
- * on both light and dark surfaces without per-mode style branches.
- */
 export const StatusBadge = ({
   tone = "neutral",
   icon,

@@ -17,14 +17,12 @@ import {
   writeLimiter,
 } from "./lib/rateLimiters.js";
 
+// Route imports
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
-import feedRoutes from "./routes/feed.route.js";
 import notificationRoutes from "./routes/notification.route.js";
-import connectionRoutes from "./routes/connection.route.js";
 import workRoutes from "./routes/work.route.js";
 import workDetailRoutes from "./routes/workDetails.route.js";
-import newsRoutes from "./routes/news.route.js";
 import messageRoutes from "./routes/message.route.js";
 import servicesRoutes from "./routes/services.route.js";
 import searchRoutes from "./routes/search.route.js";
@@ -32,6 +30,7 @@ import discoveryRoutes from "./routes/discovery.route.js";
 import matchRoutes from "./routes/match.route.js";
 import insightsRoutes from "./routes/insights.route.js";
 
+// Initialize Express app and server
 const app = express();
 const server = http.createServer(app);
 const io = initializeSocket(server);
@@ -92,13 +91,10 @@ app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/search", searchLimiter, searchRoutes);
 
 app.use("/api/v1/users", writeLimiter, userRoutes);
-app.use("/api/v1/feed", writeLimiter, feedRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
-app.use("/api/v1/connections", writeLimiter, connectionRoutes);
 app.use("/api/v1/works", writeLimiter, workRoutes);
 app.use("/api/v1/workdetails", writeLimiter, workDetailRoutes);
 app.use("/api/v1/messages", writeLimiter, messageRoutes);
-app.use("/api/v1/news", newsRoutes);
 app.use("/api/v1/services", servicesRoutes);
 app.use("/api/v1/discovery", discoveryRoutes);
 app.use("/api/v1/matches", matchRoutes);

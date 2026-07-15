@@ -7,6 +7,7 @@ import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
 import Typography from "@mui/material/Typography";
 import { Briefcase, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "@/components/ui";
 import { useAuthUser } from "@/hooks/useAuthUser";
@@ -22,6 +23,7 @@ import type { JobPost } from "@/types/jobPost";
 type TabKey = "browse" | "applications" | "mine";
 
 const Works = () => {
+  const { t } = useTranslation();
   const { data: authUser } = useAuthUser();
   const isClient = authUser?.role === "Client";
 
@@ -34,20 +36,20 @@ const Works = () => {
 
   const tabs: { value: TabKey; label: string; count?: number }[] = useMemo(
     () => [
-      { value: "browse", label: "Browse jobs", count: open.data?.length },
+      { value: "browse", label: t("works.tabs.browse"), count: open.data?.length },
       isClient
         ? {
             value: "mine",
-            label: "My posts",
+            label: t("works.tabs.mine"),
             count: myPosts.data?.length,
           }
         : {
             value: "applications",
-            label: "My applications",
+            label: t("works.tabs.applications"),
             count: applications.data?.length,
           },
     ],
-    [isClient, open.data, applications.data, myPosts.data]
+    [isClient, open.data, applications.data, myPosts.data, t]
   );
 
   const activeQuery =
@@ -71,12 +73,10 @@ const Works = () => {
       >
         <Box>
           <Typography variant="h4" sx={{ fontWeight: 600, letterSpacing: "-0.02em" }}>
-            {isClient ? "Hire a Worker" : "Find work"}
+            {isClient ? t("works.title.client") : t("works.title.worker")}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, maxWidth: 520 }}>
-            {isClient
-              ? "Post a job, review applicants, and pick the Worker that fits. You can manage every job's status from its detail page."
-              : "Browse open jobs from Clients, apply with one click, and track what you've put your name on."}
+            {isClient ? t("works.subtitle.client") : t("works.subtitle.worker")}
           </Typography>
         </Box>
         {isClient ? (
@@ -85,7 +85,7 @@ const Works = () => {
             startIcon={<Plus size={14} />}
             onClick={() => setCreateOpen(true)}
           >
-            Post a job
+            {t("works.postJob")}
           </Button>
         ) : null}
       </Box>
@@ -152,20 +152,21 @@ interface EmptyShellProps {
 }
 
 const EmptyShell = ({ tab, isClient, onPostJob }: EmptyShellProps) => {
+  const { t } = useTranslation();
   const messages: Record<TabKey, { title: string; description: string }> = {
     browse: {
-      title: "No open jobs right now",
+      title: t("works.empty.browse.title"),
       description: isClient
-        ? "Nobody else has posted a job here yet — be the first to put one up."
-        : "Check back soon. New jobs land here as Clients post them.",
+        ? t("works.empty.browse.descClient")
+        : t("works.empty.browse.descWorker"),
     },
     applications: {
-      title: "You haven't applied to anything yet",
-      description: "When you apply to a job, it lands here so you can track and withdraw if plans change.",
+      title: t("works.empty.applications.title"),
+      description: t("works.empty.applications.description"),
     },
     mine: {
-      title: "You haven't posted a job yet",
-      description: "Post one and Workers in your area can apply. You'll see them all in one place when they do.",
+      title: t("works.empty.mine.title"),
+      description: t("works.empty.mine.description"),
     },
   };
   const msg = messages[tab];
@@ -185,7 +186,7 @@ const EmptyShell = ({ tab, isClient, onPostJob }: EmptyShellProps) => {
         description={msg.description}
         action={
           isClient && (tab === "mine" || tab === "browse")
-            ? { label: "Post a job", onClick: onPostJob }
+            ? { label: t("works.postJob"), onClick: onPostJob }
             : undefined
         }
       />

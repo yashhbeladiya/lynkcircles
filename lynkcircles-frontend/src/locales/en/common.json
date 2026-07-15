@@ -25,6 +25,46 @@
       "browseJobs": "Browse jobs"
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "New applicants, messages, reviews, and signals from your network.",
+    "markAllRead": "Mark all as read",
+    "empty": {
+      "title": "You're all caught up",
+      "description": "When someone applies to your job, sends you a message, leaves a review, or accepts your connection — it'll show up here."
+    }
+  },
+  "works": {
+    "title": {
+      "client": "Hire a Worker",
+      "worker": "Find work"
+    },
+    "subtitle": {
+      "client": "Post a job, review applicants, and pick the Worker that fits. You can manage every job's status from its detail page.",
+      "worker": "Browse open jobs from Clients, apply with one click, and track what you've put your name on."
+    },
+    "postJob": "Post a job",
+    "tabs": {
+      "browse": "Browse jobs",
+      "mine": "My posts",
+      "applications": "My applications"
+    },
+    "empty": {
+      "browse": {
+        "title": "No open jobs right now",
+        "descClient": "Nobody else has posted a job here yet — be the first to put one up.",
+        "descWorker": "Check back soon. New jobs land here as Clients post them."
+      },
+      "applications": {
+        "title": "You haven't applied to anything yet",
+        "description": "When you apply to a job, it lands here so you can track and withdraw if plans change."
+      },
+      "mine": {
+        "title": "You haven't posted a job yet",
+        "description": "Post one and Workers in your area can apply. You'll see them all in one place when they do."
+      }
+    }
+  },
   "profile": {
     "actions": {
       "message": "Message",
@@ -32,6 +72,52 @@
       "saved": "Saved",
       "editProfile": "Edit profile",
       "whatsapp": "WhatsApp"
+    }
+  },
+  "workPage": {
+    "backToJobs": "Back to jobs",
+    "postedAgo": "Posted {{time}} ago",
+    "actions": {
+      "markComplete": "Mark complete",
+      "leaveReview": "Leave a review",
+      "reviewed": "Reviewed",
+      "status": "Status",
+      "youWereHired": "You were hired!",
+      "positionFilled": "Position filled",
+      "withdrawApplication": "Withdraw application",
+      "closed": "Closed",
+      "apply": "Apply",
+      "message": "Message",
+      "hire": "Hire"
+    },
+    "meta": {
+      "salary": "Salary",
+      "pay": "Pay",
+      "budget": "Budget",
+      "location": "Location",
+      "frequency": "Frequency",
+      "schedule": "Schedule",
+      "experience": "Experience",
+      "neededBy": "Needed by",
+      "startDate": "Start date",
+      "applicationsClose": "Applications close"
+    },
+    "sections": {
+      "jobDescription": "Job description",
+      "skillsNeeded": "Skills needed",
+      "hiredWorker": "Hired worker",
+      "applicants": "Applicants ({{count}})",
+      "postedThisJob": "Posted this job"
+    },
+    "empty": {
+      "noApplicants": {
+        "title": "No applicants yet",
+        "description": "As Workers apply, they'll appear here with a link to their profile and a Message button."
+      }
+    },
+    "confirm": {
+      "deleteJob": "Delete this job post? This can't be undone.",
+      "hireWorker": "Hire {{name}} for this job? Other applicants will be notified the position is filled."
     }
   },
   "language": {

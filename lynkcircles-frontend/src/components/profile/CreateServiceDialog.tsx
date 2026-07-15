@@ -20,15 +20,6 @@ interface Props {
   onClose: () => void;
 }
 
-/**
- * Worker picks from a curated catalog instead of typing free-text.
- * The currency picker defaults to INR (primary market) and keeps the
- * rate-input agnostic — same component renders ₹ in India, $ in US.
- *
- * Catalog is grouped: each category renders as a non-selectable
- * subheader followed by its service options, so the dropdown reads
- * like a taxonomy not a flat 60-item list.
- */
 export const CreateServiceDialog = ({ username, open, onClose }: Props) => {
   const { data: categories } = useServiceCatalog();
   const [serviceKey, setServiceKey] = useState("");

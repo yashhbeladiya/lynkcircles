@@ -15,11 +15,6 @@ import { UserAvatar } from "@/components/ui";
 import { useAuthUser, useLogout } from "@/hooks/useAuthUser";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
-/**
- * Avatar in the top-right with a dropdown: profile / settings / sign
- * out. Pulls auth user from react-query so the avatar reflects the
- * latest profile picture without prop drilling.
- */
 export const UserMenu = () => {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const navigate = useNavigate();

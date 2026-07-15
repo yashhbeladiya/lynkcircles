@@ -13,15 +13,9 @@ interface Props {
     onClick?: () => void;
     href?: string;
   };
-  /** Optional extra content slot (e.g. secondary link, illustration). */
   footer?: ReactNode;
 }
 
-/**
- * Empty-state pattern for lists, feeds, search results, etc. The icon
- * is rendered in a soft circular tint so it reads as graphic rather
- * than as a real button.
- */
 export const EmptyState = ({
   icon: Icon,
   title,

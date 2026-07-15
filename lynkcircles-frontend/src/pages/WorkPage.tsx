@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
@@ -63,6 +64,7 @@ const isUserSummary = (
   !!v && typeof v === "object" && "_id" in v && "username" in v;
 
 const WorkPage = () => {
+  const { t } = useTranslation();
   const { workPostId } = useParams<{ workPostId: string }>();
   const navigate = useNavigate();
   const { data: authUser } = useAuthUser();
@@ -104,7 +106,7 @@ const WorkPage = () => {
   };
 
   const handleDelete = () => {
-    if (!window.confirm("Delete this job post? This can't be undone.")) return;
+    if (!window.confirm(t("workPage.confirm.deleteJob"))) return;
     deleteJob.mutate(job._id, {
       onSuccess: () => navigate("/works"),
     });
@@ -119,7 +121,7 @@ const WorkPage = () => {
         startIcon={<ArrowLeft size={14} />}
         sx={{ mb: 1.5, color: "text.secondary" }}
       >
-        Back to jobs
+        {t("workPage.backToJobs")}
       </Button>
 
       {/* Header card */}
@@ -146,7 +148,7 @@ const WorkPage = () => {
               variant="caption"
               sx={{ color: "text.tertiary", fontSize: "0.75rem" }}
             >
-              Posted {formatDistanceToNowStrict(new Date(job.createdAt))} ago
+              {t("workPage.postedAgo", { time: formatDistanceToNowStrict(new Date(job.createdAt)) })}
             </Typography>
           </Box>
 
@@ -160,7 +162,7 @@ const WorkPage = () => {
                   onClick={() => markComplete.mutate(job._id)}
                   disabled={markComplete.isPending}
                 >
-                  Mark complete
+                  {t("workPage.actions.markComplete")}
                 </Button>
               ) : null}
               {job.status === "Completed" && !job.reviewed ? (
@@ -170,13 +172,13 @@ const WorkPage = () => {
                   startIcon={<Award size={14} />}
                   onClick={() => setReviewOpen(true)}
                 >
-                  Leave a review
+                  {t("workPage.actions.leaveReview")}
                 </Button>
               ) : null}
               {job.status === "Completed" && job.reviewed ? (
                 <Chip
                   icon={<Award size={12} />}
-                  label="Reviewed"
+                  label={t("workPage.actions.reviewed")}
                   size="small"
                   color="success"
                   variant="outlined"
@@ -187,7 +189,7 @@ const WorkPage = () => {
                 variant="outlined"
                 onClick={(e) => setStatusAnchor(e.currentTarget)}
               >
-                Status
+                {t("workPage.actions.status")}
               </Button>
               <IconButton size="small" onClick={handleDelete} aria-label="Delete job">
                 <Trash2 size={14} />
@@ -214,7 +216,7 @@ const WorkPage = () => {
               {viewerIsHired ? (
                 <Chip
                   icon={<Sparkles size={12} />}
-                  label="You were hired!"
+                  label={t("workPage.actions.youWereHired")}
                   size="small"
                   color="primary"
                   variant="filled"
@@ -228,7 +230,7 @@ const WorkPage = () => {
                   onClick={() => withdraw.mutate(job._id)}
                   disabled={withdraw.isPending || closed}
                 >
-                  {closed ? "Position filled" : "Withdraw application"}
+                  {closed ? t("workPage.actions.positionFilled") : t("workPage.actions.withdrawApplication")}
                 </Button>
               ) : (
                 <Button
@@ -238,7 +240,7 @@ const WorkPage = () => {
                   onClick={() => apply.mutate(job._id)}
                   disabled={apply.isPending || closed}
                 >
-                  {closed ? "Closed" : "Apply"}
+                  {closed ? t("workPage.actions.closed") : t("workPage.actions.apply")}
                 </Button>
               )}
             </Box>
@@ -264,32 +266,32 @@ const WorkPage = () => {
             icon={<Wallet size={14} aria-hidden />}
             label={
               job.jobType === "employment"
-                ? "Salary"
+                ? t("workPage.meta.salary")
                 : job.jobType === "recurring"
-                  ? "Pay"
-                  : "Budget"
+                  ? t("workPage.meta.pay")
+                  : t("workPage.meta.budget")
             }
             value={job.budget}
           />
-          <MetaTile icon={<MapPin size={14} aria-hidden />} label="Location" value={job.location} />
+          <MetaTile icon={<MapPin size={14} aria-hidden />} label={t("workPage.meta.location")} value={job.location} />
           {job.jobType === "recurring" && job.frequency ? (
             <MetaTile
               icon={<Calendar size={14} aria-hidden />}
-              label="Frequency"
+              label={t("workPage.meta.frequency")}
               value={job.frequency}
             />
           ) : null}
           {job.jobType === "employment" && job.schedule ? (
             <MetaTile
               icon={<Briefcase size={14} aria-hidden />}
-              label="Schedule"
+              label={t("workPage.meta.schedule")}
               value={job.schedule}
             />
           ) : null}
           {job.jobType === "employment" && typeof job.experienceMinYears === "number" ? (
             <MetaTile
               icon={<Briefcase size={14} aria-hidden />}
-              label="Experience"
+              label={t("workPage.meta.experience")}
               value={`${job.experienceMinYears}+ yrs`}
             />
           ) : null}
@@ -297,7 +299,7 @@ const WorkPage = () => {
             <MetaTile
               icon={<Calendar size={14} aria-hidden />}
               label={
-                job.jobType === "gig" || !job.jobType ? "Needed by" : "Start date"
+                job.jobType === "gig" || !job.jobType ? t("workPage.meta.neededBy") : t("workPage.meta.startDate")
               }
               value={format(new Date(job.requiredOn), "MMM d, yyyy")}
             />
@@ -305,7 +307,7 @@ const WorkPage = () => {
           {job.deadline ? (
             <MetaTile
               icon={<Clock size={14} aria-hidden />}
-              label="Applications close"
+              label={t("workPage.meta.applicationsClose")}
               value={format(new Date(job.deadline), "MMM d, yyyy")}
             />
           ) : null}
@@ -330,7 +332,7 @@ const WorkPage = () => {
               {job.author.firstName} {job.author.lastName}
             </Typography>
             <Typography variant="caption" sx={{ color: "text.tertiary" }}>
-              {job.author.headline ?? "Posted this job"}
+              {job.author.headline ?? t("workPage.sections.postedThisJob")}
             </Typography>
           </Box>
         </Box>
@@ -348,7 +350,7 @@ const WorkPage = () => {
         })}
       >
         <Typography variant="overline" sx={{ color: "text.secondary", display: "block", mb: 1 }}>
-          Job description
+          {t("workPage.sections.jobDescription")}
         </Typography>
         <Typography
           variant="body2"
@@ -363,7 +365,7 @@ const WorkPage = () => {
               variant="overline"
               sx={{ color: "text.secondary", display: "block", mb: 1 }}
             >
-              Skills needed
+              {t("workPage.sections.skillsNeeded")}
             </Typography>
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
               {job.skillsRequired.map((skill) => (
@@ -402,7 +404,7 @@ const WorkPage = () => {
               variant="overline"
               sx={{ color: "primary.main", display: "block", fontSize: "0.625rem" }}
             >
-              Hired worker
+              {t("workPage.sections.hiredWorker")}
             </Typography>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}>
               <Box
@@ -444,7 +446,7 @@ const WorkPage = () => {
             variant="outlined"
             startIcon={<MessageSquare size={13} />}
           >
-            Message
+            {t("workPage.actions.message")}
           </Button>
         </Box>
       ) : null}
@@ -469,15 +471,15 @@ const WorkPage = () => {
             }}
           >
             <Typography variant="overline" sx={{ color: "text.secondary" }}>
-              Applicants ({applicants?.length ?? 0})
+              {t("workPage.sections.applicants", { count: applicants?.length ?? 0 })}
             </Typography>
             <MoreHorizontal size={14} aria-hidden style={{ opacity: 0 }} />
           </Box>
           {!applicants || applicants.length === 0 ? (
             <EmptyState
               icon={Users}
-              title="No applicants yet"
-              description="As Workers apply, they'll appear here with a link to their profile and a Message button."
+              title={t("workPage.empty.noApplicants.title")}
+              description={t("workPage.empty.noApplicants.description")}
             />
           ) : (
             <Box sx={{ display: "grid", gap: 1 }}>
@@ -540,7 +542,7 @@ const WorkPage = () => {
                       variant="outlined"
                       startIcon={<MessageSquare size={13} />}
                     >
-                      Message
+                      {t("workPage.actions.message")}
                     </Button>
                     {job.status === "Open" ? (
                       <Button
@@ -550,7 +552,7 @@ const WorkPage = () => {
                         onClick={() => {
                           if (
                             window.confirm(
-                              `Hire ${applicant.firstName} for this job? Other applicants will be notified the position is filled.`
+                              t("workPage.confirm.hireWorker", { name: applicant.firstName })
                             )
                           ) {
                             hireApplicantMut.mutate({
@@ -561,7 +563,7 @@ const WorkPage = () => {
                         }}
                         disabled={hireApplicantMut.isPending}
                       >
-                        Hire
+                        {t("workPage.actions.hire")}
                       </Button>
                     ) : null}
                   </Box>

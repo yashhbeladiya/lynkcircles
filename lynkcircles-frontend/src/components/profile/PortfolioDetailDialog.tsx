@@ -16,8 +16,6 @@ import { AddPortfolioReviewDialog } from "./AddPortfolioReviewDialog";
 interface Props {
   entry: JobPortfolio | null;
   username: string;
-  /** True if the viewer is the portfolio owner (Worker) — hides the
-   *  "Leave a review" CTA, since you can't review your own work. */
   isOwn: boolean;
   open: boolean;
   onClose: () => void;
@@ -28,12 +26,6 @@ const serviceName = (entry: JobPortfolio): string | null => {
   return entry.service?.serviceOffered ?? null;
 };
 
-/**
- * Lightbox-style detail view for a portfolio entry. Surfaces the full
- * description, client info, every photo, and the reviews list. The
- * "Leave a review" affordance shows only when the viewer isn't the
- * Worker themselves.
- */
 export const PortfolioDetailDialog = ({
   entry,
   username,

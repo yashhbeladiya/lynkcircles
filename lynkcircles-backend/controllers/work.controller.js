@@ -1,5 +1,4 @@
 import JobPost from "../models/jobpost.model.js";
-import User from "../models/user.model.js";
 import WorkDetail from "../models/workdetail.model.js";
 import JobPortfolio from "../models/jobportfolio.model.js";
 import Notification from "../models/notification.model.js";
@@ -55,30 +54,12 @@ export const createWork = async (req, res) => {
       author: req.user._id,
     });
     res.status(201).json(newWork);
-
-    // Send notification to all followers
-    const user = await User.find({ followingClients: req.user._id });
-    user.forEach(async (follower) => {
-      const notification = new Notification({
-        recipient: follower._id,
-        relatedUser: req.user._id,
-        type: "Job Posted by Followed Client",
-        message: `${req.user.firstName} ${req.user.lastName} posted a new work: ${title}`,
-      });
-      await notification.save();
-    });
   } catch (error) {
     console.log("Error in createWork: ", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-/**
- * Browse-jobs feed. For Workers, augments each job with a `match`
- * object computed from the Worker's offered services so the FE can
- * show "matches your trade" and sort by relevance. Clients get a
- * plain chronological list — they're not the side being matched.
- */
 export const getWorkPosts = async (req, res) => {
   try {
     const workPosts = await JobPost.find({ status: "Open" })
@@ -367,12 +348,6 @@ const requireJobOwnerOpen = async (req, jobId, allowedStatuses) => {
   return { post };
 };
 
-/**
- * Client picks one applicant as the hired Worker. Moves status to
- * In Progress and locks the post (no further applications affect the
- * outcome). Notifies the hired Worker and all the not-hired
- * applicants — "position filled" — so people aren't left hoping.
- */
 export const hireApplicant = async (req, res) => {
   try {
     const { id: jobId, workerId } = req.params;
@@ -424,12 +399,6 @@ export const hireApplicant = async (req, res) => {
   }
 };
 
-/**
- * Client marks the job complete. Status: Completed. Worker is
- * notified and prompted to expect a review. Verification check runs
- * for the Worker since "completed jobs" is one of the criteria —
- * crossing the threshold here flips the badge automatically.
- */
 export const markJobComplete = async (req, res) => {
   try {
     const { id: jobId } = req.params;
@@ -466,19 +435,6 @@ export const markJobComplete = async (req, res) => {
   }
 };
 
-/**
- * Client reviews the completed job. We create a JobPortfolio entry
- * on the hired Worker's profile (so the work shows up in their
- * portfolio) AND embed the review in it. This is the trust-loop
- * close: a completed hire turns into a portfolio entry + a
- * review-with-photos, exactly what makes a future Client willing to
- * hire this Worker.
- *
- * If the Worker has a matching WorkDetail for the job's service,
- * link to that; otherwise we create a minimal one so the
- * required `service` ref on JobPortfolio is satisfied without
- * blocking the review submission.
- */
 export const reviewCompletedJob = async (req, res) => {
   try {
     const { id: jobId } = req.params;

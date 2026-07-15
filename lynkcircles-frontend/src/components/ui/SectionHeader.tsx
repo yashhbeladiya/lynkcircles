@@ -3,20 +3,12 @@ import Typography from "@mui/material/Typography";
 import type { ReactNode } from "react";
 
 interface Props {
-  /** Mono overline above the title — used for category/section labels. */
   eyebrow?: string;
   title: string;
   description?: string;
-  /** Right-aligned action slot (button, link, filter). */
   action?: ReactNode;
 }
 
-/**
- * Section header with an optional mono "eyebrow", a title, an optional
- * description, and a right-aligned action slot. The eyebrow uses the
- * mono variant + uppercase tracking to telegraph hierarchy without
- * shouting visually.
- */
 export const SectionHeader = ({
   eyebrow,
   title,

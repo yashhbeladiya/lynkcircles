@@ -15,12 +15,6 @@ interface Props {
   isOwn: boolean;
 }
 
-/**
- * Marketplace-side of the profile: the services this Worker offers.
- * This is what makes the profile a hireable-pro page rather than a
- * social one. Clients see a grid they can browse and hire from; the
- * Worker themselves can add or remove offerings inline.
- */
 export const ServicesSection = ({ username, isOwn }: Props) => {
   const { data: services, isLoading } = useWorkDetails(username);
   const deleteService = useDeleteWorkDetail(username);
@@ -33,11 +27,13 @@ export const ServicesSection = ({ username, isOwn }: Props) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 1,
-          px: 0.5,
+          pb: 1.25,
+          mb: 1.75,
+          borderBottom: 1,
+          borderColor: "divider",
         }}
       >
-        <Typography variant="overline" sx={{ color: "text.secondary" }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: "-0.01em" }}>
           Services offered
         </Typography>
         {isOwn ? (

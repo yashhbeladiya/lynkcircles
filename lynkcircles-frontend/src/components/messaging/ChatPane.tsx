@@ -22,11 +22,6 @@ import type { UserSummary } from "@/types/user";
 
 const SAME_AUTHOR_GAP_MS = 60_000;
 
-/**
- * Right-pane chat view for the peer identified by /:peerId in the URL.
- * Handles message rendering, sending (optimistic), typing indicator
- * subscription, read-receipt emission, and the mobile back button.
- */
 export const ChatPane = () => {
   const { peerId } = useParams<{ peerId: string }>();
   const navigate = useNavigate();

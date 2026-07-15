@@ -28,17 +28,6 @@ interface Props {
   onClose: () => void;
 }
 
-/**
- * Modal for a Client to post a new job. Two skill inputs on purpose:
- *
- *  1. **Services needed** — multi-select from the canonical catalog.
- *     This is what skill-matching keys off. Required.
- *  2. **Extra requirements** — free-text chip input for must-haves
- *     outside the catalog ("Must speak Hindi", "2 yrs minimum with
- *     X brand"). Optional. Rendered separately on the job card so
- *     a Worker can tell at a glance which line items the matcher
- *     actually scored against.
- */
 // Date-label maps per job type — same `requiredOn` field, three
 // different things depending on what kind of job this is.
 const REQUIRED_ON_LABEL: Record<JobType, string> = {

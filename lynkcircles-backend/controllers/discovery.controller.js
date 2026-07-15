@@ -32,22 +32,55 @@ const toMarker = (doc, kind, extra = {}) => {
 
 export const getMapData = async (req, res) => {
   try {
-    const [workers, jobs] = await Promise.all([
-      User.find({
-        role: "Worker",
-        "locationPoint.coordinates": { $exists: true, $ne: [] },
-      })
-        .select(userProjection)
-        .limit(300)
-        .lean(),
-      JobPost.find({
-        status: "Open",
-        "locationPoint.coordinates": { $exists: true, $ne: [] },
-      })
-        .select(jobProjection)
-        .limit(300)
-        .lean(),
+    const coords = req.user?.locationPoint?.coordinates;
+    const hasCoords = Array.isArray(coords) && coords.length === 2;
+
+    const nearFilter = hasCoords
+      ? {
+          locationPoint: {
+            $near: {
+              $geometry: { type: "Point", coordinates: coords },
+              $maxDistance: 50000,
+            },
+          },
+        }
+      : {};
+
+    const baseWorkerQuery = {
+      role: "Worker",
+      "locationPoint.coordinates": { $exists: true, $ne: [] },
+      ...nearFilter,
+    };
+
+    const baseJobQuery = {
+      status: "Open",
+      "locationPoint.coordinates": { $exists: true, $ne: [] },
+      ...nearFilter,
+    };
+
+    let [workers, jobs] = await Promise.all([
+      User.find(baseWorkerQuery).select(userProjection).limit(300).lean(),
+      JobPost.find(baseJobQuery).select(jobProjection).limit(300).lean(),
     ]);
+
+    if (hasCoords && workers.length === 0 && jobs.length === 0) {
+      [workers, jobs] = await Promise.all([
+        User.find({
+          role: "Worker",
+          "locationPoint.coordinates": { $exists: true, $ne: [] },
+        })
+          .select(userProjection)
+          .limit(300)
+          .lean(),
+        JobPost.find({
+          status: "Open",
+          "locationPoint.coordinates": { $exists: true, $ne: [] },
+        })
+          .select(jobProjection)
+          .limit(300)
+          .lean(),
+      ]);
+    }
 
     const workerPins = workers
       .map((w) =>

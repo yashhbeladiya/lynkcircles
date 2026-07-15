@@ -19,21 +19,6 @@ interface Props {
   onOpen: () => void;
 }
 
-/**
- * ⌘K command palette — real search across Workers and Jobs. Mounts a
- * global keydown listener so the shortcut works from anywhere.
- *
- * Layout:
- *   [ icon ] [ input ........................ ] [ ESC ]
- *   --------------------------------------------------
- *   Service chip suggestions (if any catalog matches)
- *   Workers (top 5)  →  click to /profile/:username
- *   Jobs (top 5)     →  click to /works/:id
- *
- * Below 2 chars the hook skips the network call and we show a
- * "Try…" empty state. Above 2, results stream in once the 250ms
- * debounce settles.
- */
 export const CommandPalette = ({ open, onClose, onOpen }: Props) => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();

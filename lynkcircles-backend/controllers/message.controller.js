@@ -5,14 +5,6 @@ import { uploadBufferToCloudinary } from "../util/util.js";
 
 const SENDER_FIELDS = "_id firstName lastName username profilePicture";
 
-/**
- * Find-then-update-or-create. See the matching helper in lib/socket.js
- * for the full explanation — TL;DR: MongoDB rejects a single
- * findOneAndUpdate(upsert) when `participants` appears in both the
- * filter (via $all) and $setOnInsert ("path matched twice"), and that
- * exception was tearing down the message-send flow before the realtime
- * emit could fire.
- */
 const upsertConversation = async (userA, userB, lastMessageId) => {
   const existing = await Conversation.findOneAndUpdate(
     {

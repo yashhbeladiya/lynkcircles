@@ -3,14 +3,11 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import {
+  Bell,
   Briefcase,
-  Heart,
-  MessageCircle,
   MessageSquare,
   Star,
   Trash2,
-  UserCheck,
-  UserPlus,
   type LucideIcon,
 } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -24,65 +21,31 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
-/**
- * Marketplace-aware notification mapping. A Job Application notif
- * deep-links to /works/:id (where the applicants list lives), a
- * Review notif goes to your profile (where reviews surface), a
- * Connection-accepted notif goes to the new connection's profile.
- * Each type has its own icon + tint so the row is glanceable.
- */
 type IconSpec = {
   icon: LucideIcon;
   tint: "primary" | "warning" | "success" | "secondary";
 };
 
 const iconFor = (type: NotificationType): IconSpec => {
-  switch (type) {
-    case "Job Application":
-      return { icon: Briefcase, tint: "primary" };
-    case "Job Posted by Followed Client":
-      return { icon: Briefcase, tint: "primary" };
-    case "Message":
-      return { icon: MessageSquare, tint: "primary" };
-    case "Review":
-      return { icon: Star, tint: "warning" };
-    case "like":
-      return { icon: Heart, tint: "warning" };
-    case "comment":
-      return { icon: MessageCircle, tint: "primary" };
-    case "follow":
-      return { icon: UserPlus, tint: "secondary" };
-    case "connectionAccepted":
-      return { icon: UserCheck, tint: "success" };
-  }
+  const iconMap: Record<NotificationType, IconSpec> = {
+    "Job Application": { icon: Briefcase, tint: "primary" },
+    "Message": { icon: MessageSquare, tint: "primary" },
+    "Review": { icon: Star, tint: "warning" },
+  };
+  return iconMap[type] || { icon: Bell, tint: "secondary" };
 };
 
 const linkFor = (n: AppNotification): string | null => {
-  // The backend's emit paths use the related fields inconsistently —
-  // pick whichever points at the right destination per type.
   switch (n.type) {
     case "Job Application":
-    case "Job Posted by Followed Client":
       return n.relatedJob ? `/works/${n.relatedJob}` : null;
     case "Message":
       return n.relatedUser ? `/messages/${n.relatedUser._id}` : "/messages";
     case "Review":
       return n.relatedUser ? `/profile/${n.relatedUser.username}` : null;
-    case "like":
-    case "comment":
-      return n.relatedPost ? `/feed/${n.relatedPost._id}` : null;
-    case "follow":
-    case "connectionAccepted":
-      return n.relatedUser ? `/profile/${n.relatedUser.username}` : null;
   }
 };
 
-/**
- * Compose a sensible message from whichever field the backend filled
- * in (content / message) plus the related user's name + a verb that
- * matches the notification type. Falls back to type-default copy if
- * the server-side string is missing.
- */
 const composeMessage = (n: AppNotification): string => {
   const fromBackend = n.content || n.message;
   if (fromBackend) return fromBackend;
@@ -92,20 +55,10 @@ const composeMessage = (n: AppNotification): string => {
   switch (n.type) {
     case "Job Application":
       return `${name} applied to your job post.`;
-    case "Job Posted by Followed Client":
-      return `${name} posted a new job.`;
     case "Message":
       return `${name} sent you a message.`;
     case "Review":
       return `${name} left a review on your work.`;
-    case "like":
-      return `${name} liked your post.`;
-    case "comment":
-      return `${name} commented on your post.`;
-    case "follow":
-      return `${name} started following you.`;
-    case "connectionAccepted":
-      return `${name} accepted your connection request.`;
   }
 };
 

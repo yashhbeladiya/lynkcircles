@@ -20,9 +20,6 @@ export interface AuthUser {
   bannerImage?: string | null;
   headline?: string;
   bio?: string;
-  connections?: string[];
-  /** Worker ids the user has bookmarked. Replaces the old connection
-   *  graph as the primary "people-I-want-to-find-again" primitive. */
   savedWorkers?: string[];
   verified?: boolean;
   location?: {
@@ -64,29 +61,10 @@ export interface UserSummary {
     state?: string;
     zipCode?: string;
   };
-  connections?: string[];
-  /** Set by endpoints that compare to the requesting user's location.
-   *  Null if either side doesn't have coordinates. */
   distanceKm?: number | null;
 }
 
-/** A pending connection request as returned by GET /connections/requests. */
-export interface ConnectionRequest {
-  _id: string;
-  sender: UserSummary;
-  recipient: string;
-  status: "pending" | "accepted" | "rejected";
-  createdAt?: string;
-}
-
-/**
- * Full public profile as returned by GET /users/profile/:username.
- * Mirrors the User model with `password` stripped. Used by the Profile
- * page; not all fields are guaranteed to be present on every user.
- */
 export interface UserProfile extends AuthUser {
-  followers?: string[];
-  followingClients?: string[];
   savedWorkers?: string[];
   socialLinks?: {
     linkedin?: string;
@@ -96,9 +74,3 @@ export interface UserProfile extends AuthUser {
     website?: string;
   };
 }
-
-export type ConnectionStatus =
-  | { status: "connected" }
-  | { status: "pending" }
-  | { status: "received"; requestId: string }
-  | { status: "not_connected" };

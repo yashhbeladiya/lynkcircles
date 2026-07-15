@@ -11,10 +11,6 @@ interface Props {
   user: UserProfile;
 }
 
-// MUI brand icons (sized via fontSize prop) + lucide Globe for the
-// non-branded website link. Mixed-source is intentional: lucide-react
-// v1 dropped social-brand icons for trademark reasons, and MUI's
-// brand icons are clean enough that pulling both libs is fine.
 const linkIcons = {
   github: GitHub,
   linkedin: LinkedIn,
@@ -44,7 +40,7 @@ export const AboutSection = ({ user }: Props) => {
         mb: 2,
       })}
     >
-      <Typography variant="overline" sx={{ color: "text.secondary", display: "block", mb: 1 }}>
+      <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: "-0.01em", pb: 1.25, mb: 1.75, borderBottom: 1, borderColor: "divider" }}>
         About
       </Typography>
       {user.bio ? (

@@ -17,15 +17,6 @@ const formatLocation = (loc?: UserSummary["location"]) => {
   return parts.length ? parts.join(", ") : null;
 };
 
-/**
- * Compact tile for the "Workers to hire" / "People to connect with"
- * sections on Home. Vertical layout, photo dominant — designed to
- * sit in a multi-column grid where scanability beats density.
- *
- * Whole card links to profile; the Client can choose to message or
- * connect from there. Keeping the action surface light here avoids
- * the LinkedIn-style "Connect" arms race in the dashboard.
- */
 export const DiscoveryUserCard = ({ user }: Props) => {
   const location = formatLocation(user.location);
 

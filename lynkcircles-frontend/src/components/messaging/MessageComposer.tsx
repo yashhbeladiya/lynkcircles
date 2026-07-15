@@ -38,16 +38,6 @@ const inferFileType = (file: File): FileType => {
   return "document";
 };
 
-/**
- * Composer at the bottom of the chat pane. Handles:
- * - Plain text send (Enter, Shift-Enter for newline).
- * - Attachment pick + preview + remove + 10MB cap (matches server).
- * - Typing event emission, debounced so we don't flood the socket.
- *
- * Upload happens BEFORE the message emit so the server receives a
- * canonical `fileUrl` and the FE never has to reconcile an upload
- * that races a socket round-trip.
- */
 export const MessageComposer = ({ disabled, onTyping, onSend }: Props) => {
   const [content, setContent] = useState("");
   const [attachment, setAttachment] = useState<AttachmentDraft | null>(null);

@@ -8,10 +8,6 @@ const labelFor = (date: Date) => {
   return format(date, "PPP"); // e.g. "May 14th, 2026"
 };
 
-/**
- * Inline divider between groups of messages that fall on different
- * days. Subtle pill — informative without competing with the bubbles.
- */
 export const DateDivider = ({ date }: { date: string | Date }) => (
   <Box
     sx={{

@@ -10,7 +10,6 @@ import { useUserPortfolio } from "@/hooks/useWorkDetails";
 import type { PortfolioReview } from "@/types/workDetail";
 
 interface FlatReview extends PortfolioReview {
-  /** Portfolio entry title — the specific job this review was left for. */
   jobTitle: string;
   portfolioId: string;
 }
@@ -20,14 +19,6 @@ interface Props {
   isOwn: boolean;
 }
 
-/**
- * Aggregates every review left on this Worker's completed jobs.
- * Reviews now live on JobPortfolio entries (per-job, with proof
- * photos) — service-level reviews on WorkDetail were a parallel
- * system that produced the same noise twice, and have been retired.
- * The aggregate rating shown here is the rolled-up average across
- * all per-job reviews.
- */
 export const ReviewsSection = ({ username, isOwn }: Props) => {
   const { data: portfolio, isLoading } = useUserPortfolio(username);
 
@@ -63,11 +54,13 @@ export const ReviewsSection = ({ username, isOwn }: Props) => {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mb: 1,
-          px: 0.5,
+          pb: 1.25,
+          mb: 1.75,
+          borderBottom: 1,
+          borderColor: "divider",
         }}
       >
-        <Typography variant="overline" sx={{ color: "text.secondary" }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, letterSpacing: "-0.01em" }}>
           Reviews
         </Typography>
         {summary ? (
@@ -77,15 +70,15 @@ export const ReviewsSection = ({ username, isOwn }: Props) => {
               alignItems: "center",
               gap: 0.5,
               color: "warning.main",
-              fontSize: "0.75rem",
-              fontWeight: 600,
+              fontWeight: 700,
+              fontSize: "0.875rem",
             }}
           >
-            <Star size={12} fill="currentColor" aria-hidden />
-            <span>
-              {summary.avg.toFixed(1)} · {summary.count} review
-              {summary.count === 1 ? "" : "s"}
-            </span>
+            <Star size={13} fill="currentColor" aria-hidden />
+            <span>{summary.avg.toFixed(1)}</span>
+            <Typography component="span" variant="caption" sx={{ color: "text.secondary", fontWeight: 400 }}>
+              · {summary.count} review{summary.count === 1 ? "" : "s"}
+            </Typography>
           </Box>
         ) : null}
       </Box>

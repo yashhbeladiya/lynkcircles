@@ -23,9 +23,7 @@ interface User {
 interface Props {
   user: User;
   size?: AvatarSize;
-  /** Show a green "online" dot in the bottom-right corner. */
   online?: boolean;
-  /** Show a small verified badge in the bottom-right corner. */
   verified?: boolean;
   alt?: string;
 }
@@ -36,16 +34,6 @@ const initials = (user: User) => {
   return (f + l).toUpperCase() || "?";
 };
 
-/**
- * Branded user avatar. One component for the entire app so verified
- * and online indicators are positioned identically everywhere.
- *
- * Decision: verified takes priority over online. If a user is both
- * verified AND online, we show the verified mark — they're seen most
- * often in lists where verification is a stronger trust signal than
- * presence. Online state is implied by other cues (chat composer
- * activity, "last seen" timestamps).
- */
 export const UserAvatar = ({
   user,
   size = "md",
