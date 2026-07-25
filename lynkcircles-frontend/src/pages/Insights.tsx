@@ -16,7 +16,7 @@ import {
   YAxis,
 } from "recharts";
 
-import { useInsights } from "@/hooks/useInsights";
+import { useInsights, type WorkerInsights, type ClientInsights } from "@/hooks/useInsights";
 import { useAuthUser } from "@/hooks/useAuthUser";
 
 const StatCard = ({
@@ -187,12 +187,7 @@ const Insights = () => {
   );
 };
 
-const WorkerView = ({
-  data,
-}: {
-  data: Extract<ReturnType<typeof useInsights>["data"], { role: "Worker" }>;
-}) => {
-  if (!data) return null;
+const WorkerView = ({ data }: { data: WorkerInsights }) => {
   const t = data.totals;
   return (
     <>
@@ -311,12 +306,7 @@ const WorkerView = ({
   );
 };
 
-const ClientView = ({
-  data,
-}: {
-  data: Extract<ReturnType<typeof useInsights>["data"], { role: "Client" }>;
-}) => {
-  if (!data) return null;
+const ClientView = ({ data }: { data: ClientInsights }) => {
   const t = data.totals;
   return (
     <>
