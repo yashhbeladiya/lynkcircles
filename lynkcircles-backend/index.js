@@ -101,10 +101,10 @@ app.use("/api/v1/matches", matchRoutes);
 app.use("/api/v1/insights", insightsRoutes);
 
 if (isProd) {
-  app.use(express.static(path.join(__dirname, "/lynkcircles-react-app/build")));
+  app.use(express.static(path.join(__dirname, "/lynkcircles-frontend/dist")));
   app.get("*", (req, res) => {
     res.sendFile(
-      path.resolve(__dirname, "lynkcircles-react-app", "build", "index.html")
+      path.resolve(__dirname, "lynkcircles-frontend", "dist", "index.html")
     );
   });
 }
